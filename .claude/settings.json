@@ -1,0 +1,11 @@
+{
+    "customSkills": [
+        ".claude/skills/java-module.md",
+        ".claude/skills/vue-admin-page.md",
+        ".claude/skills/vue-web-page.md",
+        ".claude/skills/smart-campus-java.md",
+        ".claude/skills/smart-campus-front.md"
+    ],
+    "projectContextFile": "CLAUDE.md",
+    "autoLoadSkills": true
+}
