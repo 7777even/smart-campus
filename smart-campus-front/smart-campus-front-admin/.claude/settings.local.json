@@ -6,7 +6,9 @@
       "mcp__Claude_Preview__preview_start",
       "Bash(npx vite *)",
       "Bash(curl -s http://localhost:3001)",
-      "Bash(curl -s http://localhost:3002)"
+      "Bash(curl -s http://localhost:3002)",
+      "Bash(npx vue-tsc *)",
+      "Bash(npm run *)"
     ]
   }
 }

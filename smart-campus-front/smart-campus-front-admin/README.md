@@ -1,38 +1,219 @@
-# smart-campus-front-admin
+# 智慧校园后台管理系统
 
-This template should help get you started developing with Vue 3 in Vite.
+## 项目概述
 
-## Recommended IDE Setup
+智慧校园后台管理系统是一个基于 Vue 3 + Element Plus 构建的现代化教学管理后台。覆盖院系管理、专业管理、班级管理、学生管理、教师管理等基础数据管理，以及课程管理、习题管理、试卷管理、考试管理等教学业务模块，同时提供公告管理、权限管理等系统管理功能。
 
-[VS Code](https://code.visualstudio.com/) + [Vue (Official)](https://marketplace.visualstudio.com/items?itemName=Vue.volar) (and disable Vetur).
+## 技术栈
 
-## Recommended Browser Setup
+| 层        | 技术                          |
+| --------- | ----------------------------- |
+| 框架      | Vue 3 (Composition API)       |
+| 路由      | Vue Router 5                  |
+| 状态管理  | Pinia                         |
+| UI 组件库 | Element Plus                  |
+| 图标      | @element-plus/icons-vue       |
+| 构建工具  | Vite 8                        |
+| CSS 预处理器 | SCSS                      |
+| 包管理    | npm                           |
 
-- Chromium-based browsers (Chrome, Edge, Brave, etc.):
-  - [Vue.js devtools](https://chromewebstore.google.com/detail/vuejs-devtools/nhdogjmejiglipccpnnnanhbledajbpd)
-  - [Turn on Custom Object Formatter in Chrome DevTools](http://bit.ly/object-formatters)
-- Firefox:
-  - [Vue.js devtools](https://addons.mozilla.org/en-US/firefox/addon/vue-js-devtools/)
-  - [Turn on Custom Object Formatter in Firefox DevTools](https://fxdx.dev/firefox-devtools-custom-object-formatters/)
+## 项目结构
 
-## Customize configuration
+```
+src/
+├── App.vue                        # 根组件
+├── main.js                        # 入口文件
+├── components/                    # 通用组件
+│   ├── AdminLayout.vue            # 后台布局（顶栏 + 侧边栏 + 内容区）
+│   ├── BaseCover.vue              # 通用封面/头像图片组件
+│   ├── BaseDataTable.vue          # 通用数据表格（含分页）
+│   ├── BaseDialog.vue             # 通用弹出框
+│   └── BaseDrawer.vue             # 通用抽屉
+├── router/
+│   └── index.js                   # 路由配置（13 个路由）
+├── stores/
+│   └── counter.js                 # Pinia 示例 Store
+└── views/                         # 页面视图
+    ├── dashboard/                 # 数据看板
+    ├── departments/               # 院系管理
+    ├── majors/                    # 专业管理
+    ├── classes/                   # 班级管理
+    ├── students/                  # 学生管理
+    ├── teachers/                  # 教师管理
+    ├── resources/                 # 资源管理
+    ├── courses/                   # 课程管理
+    ├── exercises/                 # 习题管理
+    ├── papers/                    # 试卷管理
+    ├── exams/                     # 考试管理
+    ├── announcements/             # 公告管理
+    └── permissions/               # 权限管理
+```
 
-See [Vite Configuration Reference](https://vite.dev/config/).
+## 路由 & 菜单
 
-## Project Setup
+| 模块       | 路由            | 菜单分组     | 说明           |
+| ---------- | --------------- | ------------ | -------------- |
+| 数据看板   | /dashboard      | 首页         | 统计展示       |
+| 院系管理   | /departments    | 基础数据     | CRUD           |
+| 专业管理   | /majors         | 基础数据     | CRUD + 搜索    |
+| 班级管理   | /classes        | 基础数据     | CRUD + 搜索    |
+| 学生管理   | /students       | 基础数据     | CRUD + 搜索    |
+| 教师管理   | /teachers       | 基础数据     | CRUD + 搜索    |
+| 资源管理   | /resources      | 资源中心     | 上传 + CRUD    |
+| 课程管理   | /courses        | 教学业务     | CRUD + 搜索    |
+| 习题管理   | /exercises      | 教学业务     | CRUD + 搜索    |
+| 试卷管理   | /papers         | 教学业务     | CRUD + 组卷    |
+| 考试管理   | /exams          | 教学业务     | 安排 + 成绩    |
+| 公告管理   | /announcements  | 系统管理     | CRUD + 发布    |
+| 权限管理   | /permissions    | 系统管理     | 用户/角色/菜单 |
 
-```sh
+## 通用组件
+
+### AdminLayout
+后台页面布局，包含顶部导航栏（首页/基础数据/资源中心/教学业务/系统管理）、左侧二级菜单栏和右侧内容区。支持路由联动激活状态。
+
+### BaseDataTable
+通用数据表格，封装 el-table + el-pagination，支持：
+- 复选框多选
+- 序号列
+- 自定义列模板（插槽）
+- 自动适应高度（ResizeObserver）
+- 分页双向绑定（v-model）
+
+### BaseDialog
+通用弹出框，支持：
+- 自定义标题、宽度、顶部间距
+- 内容滚动（自适应最大高度）
+- 底部按钮自定义文案和加载状态
+- 取消/关闭按钮可控制显示
+
+### BaseDrawer
+通用抽屉，支持：
+- 右侧滑入（默认，可配置方向）
+- 自定义大小（px / %）
+- 内容滚动、底部按钮区域
+- 与 BaseDialog 一致的 API
+
+### BaseCover
+通用封面/头像图片组件，支持：
+- 自定义宽高比（4:3、1:1、16:9 等）
+- 圆形 / 圆角矩形 / 直角 三种形状
+- 图片加载失败占位图标
+- 骨架屏加载动画
+- 可选阴影
+
+## 模块功能详解
+
+### 院系管理 (`/departments`)
+- 新增院系（弹窗表单）
+- 编辑院系（自动填充表单）
+- 查看详情（抽屉模式）
+- 删除（确认对话框）
+- 分页查询 + 状态标签
+
+### 专业管理 (`/majors`)
+- 搜索栏（专业名称/编码 + 所属院系 + 学历层次）
+- 新增/编辑专业（名称、编码、院系、层次、学制年限）
+- 查看详情
+
+### 班级管理 (`/classes`)
+- 搜索栏（班级名称 + 院系 + 专业三级联动）
+- 新增/编辑班级（班级信息 + 入学年份 + 人数）
+- 院系联动自动过滤专业选项
+
+### 学生管理 (`/students`)
+- 搜索栏（学号/姓名 + 院系 + 专业 + 性别 + 状态）
+- 新增/编辑学生（完整信息表单含学号、院系、专业、班级等）
+- 导入/导出功能（模拟）
+- 状态标签（在读/休学/毕业/退学）
+
+### 教师管理 (`/teachers`)
+- 搜索栏（工号/姓名 + 院系 + 职称）
+- 新增/编辑教师（工号、职称、学历等）
+- 排课分配按钮（模拟）
+- 职称颜色标签（教授/副教授/讲师/助教）
+
+### 资源管理 (`/resources`)
+- 统计数据卡片（总数/视频/文档/存储量）
+- 上传资源（模拟文件上传）
+- 搜索栏（名称 + 类型 + 分类）
+- 下载资源（模拟）
+- 资源类型标签区分
+
+### 课程管理 (`/courses`)
+- 搜索栏（名称/编码 + 院系 + 类型 + 学分）
+- 新增/编辑课程（关联教师 + 学分/学时/地点）
+- 课程类型标签（必修/选修/公共）
+
+### 习题管理 (`/exercises`)
+- 搜索栏（题目 + 题型 + 难度 + 课程）
+- 支持单选题、多选题、判断题、填空题、简答题
+- 题目预览抽屉（带选项和解析展示）
+- 批量导入（模拟）
+
+### 试卷管理 (`/papers`)
+- 搜索栏（试卷名称 + 课程 + 发布状态）
+- 组卷配置（各题型题量和分值）
+- 试卷预览抽屉（结构展示）
+- 草稿/已发布状态切换
+- 自动计算总题数
+
+### 考试管理 (`/exams`)
+- 统计数据卡片（全部/待开始/进行中/已结束）
+- 搜索栏（考试名称 + 状态 + 日期范围）
+- 安排考试（关联试卷 + 时间 + 地点 + 监考）
+- 成绩查看抽屉（表格 + 平均分/最高分/及格率统计）
+
+### 公告管理 (`/announcements`)
+- 搜索栏（标题 + 紧急程度 + 状态）
+- 紧急程度标签（紧急/重要/普通）
+- 公告内容支持多行文本（pre-wrap）
+- 发布/下架状态切换
+
+### 权限管理 (`/permissions`)
+- 三 Tab 页布局（用户管理 / 角色管理 / 菜单权限）
+- 用户管理：启用/禁用用户，编辑角色
+- 角色管理：预设超级管理员、管理员、教师、学生四种角色
+- 菜单权限：树形权限配置组件
+- 菜单管理：树形表格展示路由菜单结构
+
+## 分页与搜索
+
+所有数据列表均支持：
+- **分页**：每页条数可切换（10/15/20/30/50），页码跳转
+- **搜索**：关键字搜索 + 多条件筛选（下拉选择器、日期范围等）
+- **重置**：一键清空搜索条件
+
+## 快速开始
+
+```bash
+# 安装依赖
 npm install
-```
 
-### Compile and Hot-Reload for Development
-
-```sh
+# 启动开发服务器
 npm run dev
-```
 
-### Compile and Minify for Production
-
-```sh
+# 构建生产版本
 npm run build
+
+# 预览构建结果
+npm run preview
 ```
+
+## 开发说明
+
+- 本项目使用 JavaScript，采用 Vue 3 Composition API + `<script setup>` 语法
+- 当前数据为模拟数据（`setTimeout` 模拟异步请求），接入真实后端 API 时替换 `fetchData` 中的逻辑即可
+- 通用表单提交使用 `BaseDialog` + `confirmLoading` 模拟加载状态
+- 布局文件 `[AdminLayout.vue](src/components/AdminLayout.vue)` 中可配置菜单数据
+- 路由配置位于 `[router/index.js](src/router/index.js)`
+- 通用组件位于 `[components/](src/components/)`
+
+## 接入真实 API
+
+每个视图页面的 `fetchData` 函数是数据入口，当前使用 `setTimeout` 返回模拟数据。接入后端 API 时：
+
+1. 在 `src/` 下创建 `api/` 目录管理接口请求
+2. 使用 `main.js` 中已引入的 axios 发送请求
+3. 替换 `fetchData` 中 `setTimeout` 为真实 API 调用
+4. 处理加载状态（`loading`）和错误提示
