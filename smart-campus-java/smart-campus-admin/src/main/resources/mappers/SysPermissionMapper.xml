@@ -1,0 +1,106 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.smart.campus.admin.mappers.SysPermissionMapper">
+
+    <resultMap id="BaseResultMap" type="com.smart.campus.admin.entity.SysPermission">
+        <id column="id" property="id" />
+        <result column="name" property="name" />
+        <result column="perms" property="perms" />
+        <result column="path" property="path" />
+        <result column="icon" property="icon" />
+        <result column="sort" property="sort" />
+        <result column="parent_id" property="parentId" />
+        <result column="type" property="type" />
+        <result column="status" property="status" />
+    </resultMap>
+
+    <sql id="Base_Column_List">
+        id, name, perms, path, icon, sort, parent_id, type, status
+    </sql>
+
+    <select id="selectById" resultMap="BaseResultMap">
+        SELECT <include refid="Base_Column_List" />
+        FROM sys_permission WHERE id = #{id}
+    </select>
+
+    <select id="selectByParentId" resultMap="BaseResultMap">
+        SELECT <include refid="Base_Column_List" />
+        FROM sys_permission
+        WHERE parent_id = #{parentId}
+        ORDER BY sort ASC
+    </select>
+
+    <select id="selectList" resultMap="BaseResultMap">
+        SELECT <include refid="Base_Column_List" />
+        FROM sys_permission
+        <where>
+            <if test="keyword != null and keyword != ''">
+                AND name LIKE CONCAT('%', #{keyword}, '%')
+            </if>
+            <if test="type != null">
+                AND type = #{type}
+            </if>
+        </where>
+        ORDER BY sort ASC
+        <if test="pageNo != null and pageSize != null">
+            LIMIT #{pageNo}, #{pageSize}
+        </if>
+    </select>
+
+    <select id="selectCount" resultType="long">
+        SELECT COUNT(*) FROM sys_permission
+        <where>
+            <if test="keyword != null and keyword != ''">
+                AND name LIKE CONCAT('%', #{keyword}, '%')
+            </if>
+            <if test="type != null">
+                AND type = #{type}
+            </if>
+        </where>
+    </select>
+
+    <select id="selectPermissionIdsByRoleId" resultType="long">
+        SELECT sp.id FROM sys_permission sp
+        INNER JOIN sys_role_permission srp ON sp.id = srp.permission_id
+        WHERE srp.role_id = #{roleId}
+    </select>
+
+    <insert id="insert" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO sys_permission (name, perms, path, icon, sort, parent_id, type, status)
+        VALUES (#{name}, #{perms}, #{path}, #{icon}, #{sort}, #{parentId}, #{type}, #{status})
+    </insert>
+
+    <insert id="insertRolePermission">
+        INSERT INTO sys_role_permission (role_id, permission_id)
+        VALUES (#{roleId}, #{permissionId})
+    </insert>
+
+    <update id="update">
+        UPDATE sys_permission
+        SET name = #{name},
+            perms = #{perms},
+            path = #{path},
+            icon = #{icon},
+            sort = #{sort},
+            parent_id = #{parentId},
+            type = #{type},
+            status = #{status}
+        WHERE id = #{id}
+    </update>
+
+    <delete id="deleteById">
+        DELETE FROM sys_permission WHERE id = #{id}
+    </delete>
+
+    <delete id="deleteByIds">
+        DELETE FROM sys_permission WHERE id IN
+        <foreach collection="ids" item="id" open="(" separator="," close=")">
+            #{id}
+        </foreach>
+    </delete>
+
+    <delete id="deleteRolePermissions">
+        DELETE FROM sys_role_permission WHERE role_id = #{roleId}
+    </delete>
+
+</mapper>

@@ -128,6 +128,8 @@
 <script setup>
 import { ref, reactive, onMounted } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
+import { getTeachers, createTeacher, updateTeacher, deleteTeacher } from '@/api/teacher.js'
+import { getDepartments } from '@/api/common.js'
 import BaseDataTable from '@/components/BaseDataTable.vue'
 import BaseDialog from '@/components/BaseDialog.vue'
 import BaseDrawer from '@/components/BaseDrawer.vue'
@@ -160,13 +162,9 @@ const form = reactive({
 
 const detailData = reactive({})
 
-const departmentOptions = [
-  { id: 1, name: '计算机科学与技术学院' },
-  { id: 2, name: '数学与统计学院' },
-  { id: 3, name: '外国语学院' },
-]
+const departmentOptions = ref([])
 
-function getDeptName(id) { return departmentOptions.find(d => d.id === id)?.name || '-' }
+function getDeptName(id) { return departmentOptions.value.find(d => d.id === id)?.name || '-' }
 
 function titleType(t) {
   const map = { '教授': 'danger', '副教授': 'warning', '讲师': 'primary', '助教': 'info' }
@@ -195,35 +193,22 @@ const tableData = reactive({
   list: [],
 })
 
-function fetchData() {
+async function fetchData() {
   loading.value = true
-  setTimeout(() => {
-    const mockList = []
-    const lastNames = ['张', '李', '王', '赵', '刘', '陈', '杨', '黄', '周', '吴', '徐', '孙', '马', '朱', '胡']
-    const titles = ['教授', '副教授', '讲师', '助教']
-    const degrees = ['博士', '硕士', '本科']
-    for (let i = 0; i < 15; i++) {
-      const idx = (tableData.pageNo - 1) * 15 + i
-      mockList.push({
-        id: idx + 1,
-        teacherNo: 'T' + String(idx + 1).padStart(5, '0'),
-        name: lastNames[idx % 15] + '教授',
-        gender: i % 3 === 0 ? '女' : '男',
-        departmentId: [1, 1, 1, 2, 2, 3, 1, 1, 2, 3, 1, 2, 3, 1, 2][idx],
-        title: titles[idx % 4],
-        degree: degrees[idx % 3],
-        phone: '139' + String(20000000 + idx).slice(0, 8),
-        email: `teacher${idx + 1}@campus.edu`,
-        status: idx % 7 === 0 ? 0 : 1,
-        createTime: '2025-09-0' + ((idx % 9) + 1) + ' 00:00:00',
-        intro: '主要研究方向为...',
-      })
-    }
-    tableData.list = mockList
-    tableData.totalCount = 45
-    tableData.pageTotal = 3
+  try {
+    const params = { pageNo: tableData.pageNo, pageSize: tableData.pageSize }
+    if (searchForm.keyword) params.keyword = searchForm.keyword
+    if (searchForm.departmentId) params.departmentId = searchForm.departmentId
+    if (searchForm.title) params.title = searchForm.title
+    const res = await getTeachers(params)
+    tableData.list = res.data.list || []
+    tableData.totalCount = res.data.totalCount || 0
+    tableData.pageTotal = res.data.pageTotal || Math.ceil((res.data.totalCount || 0) / tableData.pageSize) || 0
+  } catch (e) {
+    // 错误由响应拦截器统一处理
+  } finally {
     loading.value = false
-  }, 500)
+  }
 }
 
 function resetSearch() {
@@ -267,34 +252,57 @@ function handleView(row) {
   drawerVisible.value = true
 }
 
-function handleDelete(row) {
-  ElMessageBox.confirm(`确定要删除教师「${row.name}」吗？`, '删除确认', {
-    confirmButtonText: '确定',
-    cancelButtonText: '取消',
-    type: 'warning',
-  }).then(() => {
-    const idx = tableData.list.findIndex(item => item.id === row.id)
-    if (idx !== -1) tableData.list.splice(idx, 1)
-    tableData.totalCount -= 1
+async function handleDelete(row) {
+  try {
+    await ElMessageBox.confirm(`确定要删除教师「${row.name}」吗？`, '删除确认', {
+      confirmButtonText: '确定',
+      cancelButtonText: '取消',
+      type: 'warning',
+    })
+    await deleteTeacher(row.id)
     ElMessage.success('删除成功')
-  }).catch(() => {})
+    fetchData()
+  } catch (e) {
+    // 取消操作或删除失败，错误由响应拦截器处理
+  }
 }
 
-function handleConfirm() {
+async function handleConfirm() {
   confirmLoading.value = true
-  setTimeout(() => {
-    confirmLoading.value = false
+  try {
+    if (isEditing.value) {
+      await updateTeacher(editingId.value, { ...form })
+      ElMessage.success('编辑成功')
+    } else {
+      await createTeacher({ ...form })
+      ElMessage.success('新增成功')
+    }
     dialogVisible.value = false
-    ElMessage.success(isEditing.value ? '编辑成功' : '新增成功')
     fetchData()
-  }, 800)
+  } catch (e) {
+    // 错误由响应拦截器统一处理
+  } finally {
+    confirmLoading.value = false
+  }
 }
 
 function handleAssign() {
   ElMessage.info('排课分配（模拟）')
 }
 
-onMounted(fetchData)
+async function loadOptions() {
+  try {
+    const deptRes = await getDepartments()
+    departmentOptions.value = (deptRes.data || []).map(d => ({ id: d.id, name: d.name }))
+  } catch (e) {
+    // 错误由响应拦截器统一处理
+  }
+}
+
+onMounted(() => {
+  loadOptions()
+  fetchData()
+})
 </script>
 
 <style lang="scss" scoped>

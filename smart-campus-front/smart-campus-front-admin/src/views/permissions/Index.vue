@@ -158,6 +158,7 @@ import { ref, reactive, onMounted } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import BaseDataTable from '@/components/BaseDataTable.vue'
 import BaseDialog from '@/components/BaseDialog.vue'
+import { getUsers, updateUser, deleteUser, toggleUserStatus, getRoles, getPermissionTree, assignPermissions } from '@/api/permission'
 
 const activeTab = ref('users')
 
@@ -187,28 +188,19 @@ const userColumns = [
 
 const userData = reactive({ totalCount: 0, pageSize: 15, pageNo: 1, pageTotal: 0, list: [] })
 
-function fetchUsers() {
+async function fetchUsers() {
   userLoading.value = true
-  setTimeout(() => {
-    const mockList = []
-    for (let i = 0; i < 15; i++) {
-      const idx = (userData.pageNo - 1) * 15 + i
-      const roles = ['超级管理员', '管理员', '教师', '学生']
-      mockList.push({
-        id: idx + 1,
-        username: ['admin', 'sysop', 'zhangsan', 'lisi', 'wangwu', 'zhaoliu', 'chenqi'][idx % 7],
-        realName: ['系统管理员', '系统运维', '张三', '李四', '王五', '赵六', '陈七'][idx % 7],
-        role: roles[idx % 4],
-        email: `user${idx + 1}@campus.edu`,
-        status: idx % 6 === 0 ? 0 : 1,
-        createTime: '2026-01-0' + ((idx % 9) + 1) + ' 00:00:00',
-      })
-    }
-    userData.list = mockList
-    userData.totalCount = 45
-    userData.pageTotal = 3
+  try {
+    const params = { pageNo: userData.pageNo, pageSize: userData.pageSize }
+    if (userSearch.keyword) params.keyword = userSearch.keyword
+    if (userSearch.role) params.role = userSearch.role
+    const res = await getUsers(params)
+    Object.assign(userData, res.data)
+  } catch (e) {
+    // handled by interceptor
+  } finally {
     userLoading.value = false
-  }, 500)
+  }
 }
 
 function onUserPageChange({ pageNo, pageSize }) { userData.pageNo = pageNo; userData.pageSize = pageSize; fetchUsers() }
@@ -219,42 +211,66 @@ function handleEditUser(row) {
   Object.assign(userForm, row)
   userDialogVisible.value = true
 }
-function handleToggleUser(row) {
+async function handleToggleUser(row) {
   const action = row.status === 1 ? '禁用' : '启用'
-  ElMessageBox.confirm(`确定${action}用户「${row.username}」？`, '确认', {
-    confirmButtonText: '确定', cancelButtonText: '取消', type: 'warning',
-  }).then(() => {
-    row.status = row.status === 1 ? 0 : 1
+  try {
+    await ElMessageBox.confirm(`确定${action}用户「${row.username}」？`, '确认', {
+      confirmButtonText: '确定', cancelButtonText: '取消', type: 'warning',
+    })
+    await toggleUserStatus(row.id)
     ElMessage.success(`${action}成功`)
-  }).catch(() => {})
-}
-function handleDeleteUser(row) {
-  ElMessageBox.confirm(`确定删除用户「${row.username}」？`, '删除确认', {
-    confirmButtonText: '确定', cancelButtonText: '取消', type: 'warning',
-  }).then(() => {
-    const idx = userData.list.findIndex(item => item.id === row.id)
-    if (idx !== -1) userData.list.splice(idx, 1)
-    userData.totalCount -= 1
-    ElMessage.success('删除成功')
-  }).catch(() => {})
-}
-function handleUserConfirm() {
-  userConfirmLoading.value = true
-  setTimeout(() => {
-    userConfirmLoading.value = false; userDialogVisible.value = false
-    ElMessage.success('用户信息已更新')
     fetchUsers()
-  }, 800)
+  } catch (e) {
+    if (e !== 'cancel') {
+      // handled by interceptor
+    }
+  }
+}
+async function handleDeleteUser(row) {
+  try {
+    await ElMessageBox.confirm(`确定删除用户「${row.username}」？`, '删除确认', {
+      confirmButtonText: '确定', cancelButtonText: '取消', type: 'warning',
+    })
+    await deleteUser(row.id)
+    ElMessage.success('删除成功')
+    fetchUsers()
+  } catch (e) {
+    if (e !== 'cancel') {
+      // handled by interceptor
+    }
+  }
+}
+async function handleUserConfirm() {
+  userConfirmLoading.value = true
+  try {
+    await updateUser(editingUserId.value, { ...userForm })
+    ElMessage.success('用户信息已更新')
+    userDialogVisible.value = false
+    fetchUsers()
+  } catch (e) {
+    // handled by interceptor
+  } finally {
+    userConfirmLoading.value = false
+  }
 }
 
 // ==================== Roles ====================
 const roleLoading = ref(false)
-const roleData = reactive([
-  { id: 1, name: '超级管理员', code: 'ROLE_SUPER_ADMIN', description: '拥有系统所有权限', userCount: 2, status: 1 },
-  { id: 2, name: '管理员', code: 'ROLE_ADMIN', description: '拥有大部分管理权限', userCount: 5, status: 1 },
-  { id: 3, name: '教师', code: 'ROLE_TEACHER', description: '教学相关功能权限', userCount: 45, status: 1 },
-  { id: 4, name: '学生', code: 'ROLE_STUDENT', description: '基础学习功能权限', userCount: 1200, status: 1 },
-])
+const roleData = reactive([])
+
+async function fetchRoles() {
+  roleLoading.value = true
+  try {
+    const res = await getRoles()
+    roleData.length = 0
+    const list = res.data || []
+    list.forEach(item => roleData.push(item))
+  } catch (e) {
+    // handled by interceptor
+  } finally {
+    roleLoading.value = false
+  }
+}
 
 function openAddRole() { ElMessage.info('新增角色（模拟）') }
 function handleEditRole(row) { ElMessage.info(`编辑角色：${row.name}（模拟）`) }
@@ -262,9 +278,7 @@ function handleDeleteRole(row) {
   ElMessageBox.confirm(`确定删除角色「${row.name}」？`, '确认', {
     confirmButtonText: '确定', cancelButtonText: '取消', type: 'warning',
   }).then(() => {
-    const idx = roleData.findIndex(r => r.id === row.id)
-    if (idx !== -1) roleData.splice(idx, 1)
-    ElMessage.success('删除成功')
+    ElMessage.success('删除成功（模拟）')
   }).catch(() => {})
 }
 
@@ -272,62 +286,50 @@ function handleDeleteRole(row) {
 const permDialogVisible = ref(false)
 const permConfirmLoading = ref(false)
 const permTreeRef = ref(null)
-const permTreeData = reactive([
-  { id: 1, name: '系统管理', children: [
-    { id: 11, name: '用户管理', children: [
-      { id: 111, name: '查看用户' }, { id: 112, name: '新增用户' }, { id: 113, name: '编辑用户' }, { id: 114, name: '删除用户' },
-    ]},
-    { id: 12, name: '角色管理', children: [
-      { id: 121, name: '查看角色' }, { id: 122, name: '新增角色' }, { id: 123, name: '编辑角色' },
-    ]},
-    { id: 13, name: '菜单管理', children: [{ id: 131, name: '查看菜单' }, { id: 132, name: '编辑菜单' }] },
-  ]},
-  { id: 2, name: '教学管理', children: [
-    { id: 21, name: '课程管理', children: [{ id: 211, name: '管理课程' }, { id: 212, name: '查看课程' }] },
-    { id: 22, name: '考试管理', children: [{ id: 221, name: '管理考试' }, { id: 222, name: '查看成绩' }] },
-  ]},
-  { id: 3, name: '基础数据', children: [
-    { id: 31, name: '院系管理' }, { id: 32, name: '专业管理' }, { id: 33, name: '班级管理' }, { id: 34, name: '学生管理' }, { id: 35, name: '教师管理' },
-  ]},
-])
+const permTreeData = ref([])
+const configRoleId = ref(null)
 
-function handleConfigPerm(row) {
-  ElMessage.info(`为角色「${row.name}」配置权限（模拟）`)
+async function handleConfigPerm(row) {
+  configRoleId.value = row.id
   permDialogVisible.value = true
+  try {
+    const res = await getPermissionTree()
+    permTreeData.value = res.data || []
+  } catch (e) {
+    permTreeData.value = []
+  }
 }
-function handlePermConfirm() {
+async function handlePermConfirm() {
   permConfirmLoading.value = true
-  setTimeout(() => {
-    permConfirmLoading.value = false; permDialogVisible.value = false
+  try {
+    const checkedIds = permTreeRef.value.getCheckedKeys()
+    await assignPermissions(configRoleId.value, checkedIds)
     ElMessage.success('权限配置已保存')
-  }, 800)
+    permDialogVisible.value = false
+  } catch (e) {
+    // handled by interceptor
+  } finally {
+    permConfirmLoading.value = false
+  }
 }
 
 // ==================== Menus ====================
 const menuLoading = ref(false)
-const menuData = reactive([
-  { id: 1, name: '首页', icon: 'HomeFilled', path: '/dashboard', perms: '', sort: 1, status: 1, children: [] },
-  { id: 2, name: '基础数据', icon: 'Notebook', path: '', perms: '', sort: 2, status: 1, children: [
-    { id: 21, name: '院系管理', icon: '', path: '/departments', perms: 'sys:dept:list', sort: 1, status: 1 },
-    { id: 22, name: '专业管理', icon: '', path: '/majors', perms: 'sys:major:list', sort: 2, status: 1 },
-    { id: 23, name: '班级管理', icon: '', path: '/classes', perms: 'sys:class:list', sort: 3, status: 1 },
-    { id: 24, name: '学生管理', icon: '', path: '/students', perms: 'sys:student:list', sort: 4, status: 1 },
-    { id: 25, name: '教师管理', icon: '', path: '/teachers', perms: 'sys:teacher:list', sort: 5, status: 1 },
-  ]},
-  { id: 3, name: '资源中心', icon: 'FolderOpened', path: '', perms: '', sort: 3, status: 1, children: [
-    { id: 31, name: '资源管理', icon: '', path: '/resources', perms: 'res:list', sort: 1, status: 1 },
-  ]},
-  { id: 4, name: '教学业务', icon: 'Reading', path: '', perms: '', sort: 4, status: 1, children: [
-    { id: 41, name: '课程管理', icon: '', path: '/courses', perms: 'edu:course:list', sort: 1, status: 1 },
-    { id: 42, name: '习题管理', icon: '', path: '/exercises', perms: 'edu:exercise:list', sort: 2, status: 1 },
-    { id: 43, name: '试卷管理', icon: '', path: '/papers', perms: 'edu:paper:list', sort: 3, status: 1 },
-    { id: 44, name: '考试管理', icon: '', path: '/exams', perms: 'edu:exam:list', sort: 4, status: 1 },
-  ]},
-  { id: 5, name: '系统管理', icon: 'Setting', path: '', perms: '', sort: 5, status: 1, children: [
-    { id: 51, name: '公告管理', icon: '', path: '/announcements', perms: 'sys:notice:list', sort: 1, status: 1 },
-    { id: 52, name: '权限管理', icon: '', path: '/permissions', perms: 'sys:perm:list', sort: 2, status: 1 },
-  ]},
-])
+const menuData = reactive([])
+
+async function fetchMenus() {
+  menuLoading.value = true
+  try {
+    const res = await getPermissionTree()
+    menuData.length = 0
+    const list = res.data || []
+    list.forEach(item => menuData.push(item))
+  } catch (e) {
+    // handled by interceptor
+  } finally {
+    menuLoading.value = false
+  }
+}
 
 function openAddMenu() { ElMessage.info('新增菜单（模拟）') }
 function handleEditMenu(row) { ElMessage.info(`编辑菜单：${row.name}（模拟）`) }
@@ -339,7 +341,11 @@ function handleDeleteMenu(row) {
   }).catch(() => {})
 }
 
-onMounted(fetchUsers)
+onMounted(() => {
+  fetchUsers()
+  fetchRoles()
+  fetchMenus()
+})
 </script>
 
 <style lang="scss" scoped>

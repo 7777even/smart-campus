@@ -117,6 +117,8 @@ import { ElMessage, ElMessageBox } from 'element-plus'
 import BaseDataTable from '@/components/BaseDataTable.vue'
 import BaseDialog from '@/components/BaseDialog.vue'
 import BaseDrawer from '@/components/BaseDrawer.vue'
+import { getMajors, createMajor, updateMajor, deleteMajor } from '@/api/major'
+import { getDepartments } from '@/api/common'
 
 const tableRef = ref(null)
 const loading = ref(false)
@@ -144,14 +146,10 @@ const form = reactive({
 
 const detailData = reactive({})
 
-const departmentOptions = [
-  { id: 1, name: '计算机科学与技术学院' },
-  { id: 2, name: '数学与统计学院' },
-  { id: 3, name: '外国语学院' },
-]
+const departmentOptions = ref([])
 
 function getDeptName(id) {
-  return departmentOptions.find(d => d.id === id)?.name || '-'
+  return departmentOptions.value.find(d => d.id === id)?.name || '-'
 }
 
 const columns = [
@@ -175,33 +173,18 @@ const tableData = reactive({
   list: [],
 })
 
-function fetchData() {
+async function fetchData() {
   loading.value = true
-  setTimeout(() => {
-    const mockList = []
-    const deptIds = [1, 2, 3]
-    const levels = ['本科', '专科', '硕士', '博士']
-    const majorNames = ['软件工程', '计算机科学与技术', '数据科学', '网络工程', '人工智能', '数学与应用数学', '信息与计算科学', '英语', '翻译']
-    for (let i = 0; i < 15; i++) {
-      const idx = (tableData.pageNo - 1) * 15 + i
-      mockList.push({
-        id: idx + 1,
-        name: majorNames[idx % majorNames.length] + (idx >= majorNames.length ? `(${Math.floor(idx / majorNames.length) + 1})` : ''),
-        code: 'MJ' + String(idx + 1).padStart(3, '0'),
-        departmentId: deptIds[idx % deptIds.length],
-        level: levels[idx % levels.length],
-        years: [3, 4, 2, 3][idx % 4],
-        status: idx % 5 === 0 ? 0 : 1,
-        sort: idx + 1,
-        createTime: '2026-01-0' + ((idx % 9) + 1) + ' 00:00:00',
-        description: '该专业致力于培养高素质复合型人才',
-      })
-    }
-    tableData.list = mockList
-    tableData.totalCount = 45
-    tableData.pageTotal = 3
+  try {
+    const params = { pageNo: tableData.pageNo, pageSize: tableData.pageSize }
+    if (searchForm.keyword) params.keyword = searchForm.keyword
+    if (searchForm.departmentId) params.departmentId = searchForm.departmentId
+    if (searchForm.level) params.level = searchForm.level
+    const res = await getMajors(params)
+    Object.assign(tableData, res.data)
+  } finally {
     loading.value = false
-  }, 500)
+  }
 }
 
 function resetSearch() {
@@ -247,30 +230,42 @@ function handleView(row) {
   drawerVisible.value = true
 }
 
-function handleDelete(row) {
-  ElMessageBox.confirm(`确定要删除「${row.name}」吗？`, '删除确认', {
-    confirmButtonText: '确定',
-    cancelButtonText: '取消',
-    type: 'warning',
-  }).then(() => {
-    const idx = tableData.list.findIndex(item => item.id === row.id)
-    if (idx !== -1) tableData.list.splice(idx, 1)
-    tableData.totalCount -= 1
+async function handleDelete(row) {
+  try {
+    await ElMessageBox.confirm(`确定要删除「${row.name}」吗？`, '删除确认', {
+      confirmButtonText: '确定',
+      cancelButtonText: '取消',
+      type: 'warning',
+    })
+    await deleteMajor(row.id)
     ElMessage.success('删除成功')
-  }).catch(() => {})
-}
-
-function handleConfirm() {
-  confirmLoading.value = true
-  setTimeout(() => {
-    confirmLoading.value = false
-    dialogVisible.value = false
-    ElMessage.success(isEditing.value ? '编辑成功' : '新增成功')
     fetchData()
-  }, 800)
+  } catch (e) {
+    // cancelled or error
+  }
 }
 
-onMounted(fetchData)
+async function handleConfirm() {
+  confirmLoading.value = true
+  try {
+    if (isEditing.value) {
+      await updateMajor(editingId.value, { ...form })
+      ElMessage.success('更新成功')
+    } else {
+      await createMajor({ ...form })
+      ElMessage.success('新增成功')
+    }
+    dialogVisible.value = false
+    fetchData()
+  } finally {
+    confirmLoading.value = false
+  }
+}
+
+onMounted(async () => {
+  await getDepartments().then(res => { departmentOptions.value = res.data || [] }).catch(() => {})
+  fetchData()
+})
 </script>
 
 <style lang="scss" scoped>

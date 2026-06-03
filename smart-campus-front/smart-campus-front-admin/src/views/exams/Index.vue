@@ -159,6 +159,8 @@ import { ElMessage, ElMessageBox } from 'element-plus'
 import BaseDataTable from '@/components/BaseDataTable.vue'
 import BaseDialog from '@/components/BaseDialog.vue'
 import BaseDrawer from '@/components/BaseDrawer.vue'
+import { getExams, createExam, updateExam, deleteExam } from '@/api/exam'
+import { getCourses } from '@/api/common'
 
 const tableRef = ref(null)
 const loading = ref(false)
@@ -177,15 +179,12 @@ const form = reactive({
 const detailData = reactive({})
 const gradeData = reactive([])
 
-const courseOptions = [
-  { id: 1, name: '数据结构' }, { id: 2, name: '操作系统' },
-  { id: 3, name: '计算机网络' }, { id: 4, name: '高等数学' },
-]
+const courseOptions = ref([])
 const paperOptions = [
   { id: 1, name: '数据结构期中考试' }, { id: 2, name: '操作系统期末考试' },
   { id: 3, name: '计算机网络单元测试' }, { id: 4, name: '高等数学模拟考试' },
 ]
-function getCourseName(id) { return courseOptions.find(c => c.id === id)?.name || '-' }
+function getCourseName(id) { return courseOptions.value.find(c => c.id === id)?.name || '-' }
 function getPaperName(id) { return paperOptions.find(p => p.id === id)?.name || '-' }
 
 function statusType(s) {
@@ -224,33 +223,23 @@ const columns = [
 
 const tableData = reactive({ totalCount: 0, pageSize: 15, pageNo: 1, pageTotal: 0, list: [] })
 
-function fetchData() {
+async function fetchData() {
   loading.value = true
-  setTimeout(() => {
-    const mockList = []
-    for (let i = 0; i < 15; i++) {
-      const idx = (tableData.pageNo - 1) * 15 + i
-      mockList.push({
-        id: idx + 1,
-        name: ['数据结构期中考试', '操作系统期末考试', '计算机网络单元测试', '高等数学期中考试', '数据结构期末考试', '操作系统期中考试', '大学英语测试'][idx % 7],
-        courseId: [1, 2, 3, 4, 1, 2, 4][idx % 7],
-        paperId: [1, 2, 3, 4, 1, 2, 3][idx % 7],
-        examDate: ['2026-06-10', '2026-06-20', '2026-05-15', '2026-06-25', '2026-07-01', '2026-05-28', '2026-06-18'][idx % 7],
-        startTime: ['08:30', '14:00', '10:00', '14:30', '09:00', '13:30', '15:00'][idx % 7],
-        duration: [90, 120, 60, 90, 120, 90, 60][idx % 7],
-        location: ['教学楼301', '机房201', '教学楼105', '教学楼203', '教学楼302', '机房205', '语音室'][idx % 7],
-        invigilator: ['张教授', '李教授', '王老师', '赵老师', '张教授', '赵老师', '王老师'][idx % 7],
-        totalStudents: 45,
-        attendedStudents: [0, 0, 43, 44, 0, 42, 45][idx % 7],
-        status: ['待开始', '待开始', '已结束', '进行中', '待开始', '已结束', '已结束'][idx % 7],
-        remark: '',
-      })
+  try {
+    const params = { pageNo: tableData.pageNo, pageSize: tableData.pageSize }
+    if (searchForm.keyword) params.keyword = searchForm.keyword
+    if (searchForm.status) params.status = searchForm.status
+    if (searchForm.dateRange) {
+      params.startDate = searchForm.dateRange[0]
+      params.endDate = searchForm.dateRange[1]
     }
-    tableData.list = mockList
-    tableData.totalCount = 35
-    tableData.pageTotal = 3
+    const res = await getExams(params)
+    Object.assign(tableData, res.data)
+  } catch (e) {
+    // handled by interceptor
+  } finally {
     loading.value = false
-  }, 500)
+  }
 }
 
 function resetSearch() { searchForm.keyword = ''; searchForm.status = ''; searchForm.dateRange = null; fetchData() }
@@ -284,25 +273,48 @@ function handleGrade(row) {
   }
   gradeDrawerVisible.value = true
 }
-function handleDelete(row) {
-  ElMessageBox.confirm(`确定删除考试「${row.name}」？`, '删除确认', {
-    confirmButtonText: '确定', cancelButtonText: '取消', type: 'warning',
-  }).then(() => {
-    const idx = tableData.list.findIndex(item => item.id === row.id)
-    if (idx !== -1) tableData.list.splice(idx, 1)
-    tableData.totalCount -= 1
+async function handleDelete(row) {
+  try {
+    await ElMessageBox.confirm(`确定删除考试「${row.name}」？`, '删除确认', {
+      confirmButtonText: '确定', cancelButtonText: '取消', type: 'warning',
+    })
+    await deleteExam(row.id)
     ElMessage.success('删除成功')
-  }).catch(() => {})
-}
-function handleConfirm() {
-  confirmLoading.value = true
-  setTimeout(() => {
-    confirmLoading.value = false; dialogVisible.value = false
-    ElMessage.success(isEditing.value ? '编辑成功' : '创建成功')
     fetchData()
-  }, 800)
+  } catch (e) {
+    if (e !== 'cancel') {
+      // handled by interceptor
+    }
+  }
 }
-onMounted(fetchData)
+async function handleConfirm() {
+  confirmLoading.value = true
+  try {
+    if (isEditing.value) {
+      await updateExam(editingId.value, { ...form })
+      ElMessage.success('编辑成功')
+    } else {
+      await createExam({ ...form })
+      ElMessage.success('创建成功')
+    }
+    dialogVisible.value = false
+    fetchData()
+  } catch (e) {
+    // handled by interceptor
+  } finally {
+    confirmLoading.value = false
+  }
+}
+
+async function loadCourseOptions() {
+  try {
+    const res = await getCourses()
+    courseOptions.value = res.data || []
+  } catch (e) {
+    courseOptions.value = []
+  }
+}
+onMounted(() => { loadCourseOptions(); fetchData() })
 </script>
 
 <style lang="scss" scoped>

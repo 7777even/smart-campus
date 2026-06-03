@@ -140,8 +140,10 @@
 </template>
 
 <script setup>
-import { ref, reactive, onMounted } from 'vue'
+import { ref, reactive, watch, onMounted } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
+import { getStudents, createStudent, updateStudent, deleteStudent } from '@/api/student.js'
+import { getDepartments, getMajorsByDepartment, getClasses } from '@/api/common.js'
 import BaseDataTable from '@/components/BaseDataTable.vue'
 import BaseCover from '@/components/BaseCover.vue'
 import BaseDialog from '@/components/BaseDialog.vue'
@@ -178,25 +180,12 @@ const form = reactive({
 
 const detailData = reactive({})
 
-const departmentOptions = [
-  { id: 1, name: '计算机科学与技术学院' },
-  { id: 2, name: '数学与统计学院' },
-  { id: 3, name: '外国语学院' },
-]
-const majorOptions = [
-  { id: 1, name: '软件工程', departmentId: 1 },
-  { id: 2, name: '计算机科学与技术', departmentId: 1 },
-  { id: 3, name: '数学与应用数学', departmentId: 2 },
-  { id: 4, name: '英语', departmentId: 3 },
-]
-const classOptions = [
-  { id: 1, name: '软件工程2026级1班' },
-  { id: 2, name: '软件工程2026级2班' },
-  { id: 3, name: '计算机科学与技术2025级1班' },
-]
+const departmentOptions = ref([])
+const majorOptions = ref([])
+const classOptions = ref([])
 
-function getDeptName(id) { return departmentOptions.find(d => d.id === id)?.name || '-' }
-function getMajorName(id) { return majorOptions.find(m => m.id === id)?.name || '-' }
+function getDeptName(id) { return departmentOptions.value.find(d => d.id === id)?.name || '-' }
+function getMajorName(id) { return majorOptions.value.find(m => m.id === id)?.name || '-' }
 
 function statusType(s) {
   const map = { '在读': 'success', '休学': 'warning', '毕业': 'info', '退学': 'danger' }
@@ -224,33 +213,24 @@ const tableData = reactive({
   list: [],
 })
 
-function fetchData() {
+async function fetchData() {
   loading.value = true
-  setTimeout(() => {
-    const mockList = []
-    for (let i = 0; i < 15; i++) {
-      const idx = (tableData.pageNo - 1) * 15 + i
-      const genders = ['男', '女']
-      const statuses = ['在读', '在读', '在读', '休学', '毕业']
-      mockList.push({
-        id: idx + 1,
-        studentNo: '2026' + String(idx + 1).padStart(6, '0'),
-        name: ['张三', '李四', '王五', '赵六', '陈七', '周八', '吴九', '郑十', '林小雨', '黄大伟', '刘洋', '孙丽', '杨光', '徐明', '高远'][idx % 15],
-        gender: genders[idx % 2],
-        departmentId: [1, 1, 1, 2, 2, 3, 3, 1, 1, 2, 3, 1, 2, 1, 3][idx],
-        majorId: [1, 1, 2, 3, 3, 4, 4, 1, 1, 3, 4, 2, 3, 1, 4][idx],
-        phone: '138' + String(10000000 + idx).slice(0, 8),
-        email: `student${idx + 1}@campus.edu`,
-        status: statuses[idx % 5],
-        createTime: '2026-03-0' + ((idx % 9) + 1) + ' 00:00:00',
-        address: idx % 3 === 0 ? '北京市海淀区' : '',
-      })
-    }
-    tableData.list = mockList
-    tableData.totalCount = 60
-    tableData.pageTotal = 4
+  try {
+    const params = { pageNo: tableData.pageNo, pageSize: tableData.pageSize }
+    if (searchForm.keyword) params.keyword = searchForm.keyword
+    if (searchForm.departmentId) params.departmentId = searchForm.departmentId
+    if (searchForm.majorId) params.majorId = searchForm.majorId
+    if (searchForm.gender) params.gender = searchForm.gender
+    if (searchForm.status) params.status = searchForm.status
+    const res = await getStudents(params)
+    tableData.list = res.data.list || []
+    tableData.totalCount = res.data.totalCount || 0
+    tableData.pageTotal = res.data.pageTotal || Math.ceil((res.data.totalCount || 0) / tableData.pageSize) || 0
+  } catch (e) {
+    // 错误由响应拦截器统一处理
+  } finally {
     loading.value = false
-  }, 500)
+  }
 }
 
 function resetSearch() {
@@ -283,6 +263,7 @@ function openAddDialog() {
   form.email = ''
   form.status = '在读'
   form.address = ''
+  majorOptions.value = []
   dialogVisible.value = true
 }
 
@@ -290,6 +271,12 @@ function handleEdit(row) {
   isEditing.value = true
   editingId.value = row.id
   Object.assign(form, row)
+  // 加载该院系下的专业
+  if (row.departmentId) {
+    getMajorsByDepartment(row.departmentId).then(res => {
+      majorOptions.value = (res.data || []).map(m => ({ id: m.id, name: m.name }))
+    }).catch(() => { majorOptions.value = [] })
+  }
   dialogVisible.value = true
 }
 
@@ -298,27 +285,38 @@ function handleView(row) {
   drawerVisible.value = true
 }
 
-function handleDelete(row) {
-  ElMessageBox.confirm(`确定要删除学生「${row.name}」吗？`, '删除确认', {
-    confirmButtonText: '确定',
-    cancelButtonText: '取消',
-    type: 'warning',
-  }).then(() => {
-    const idx = tableData.list.findIndex(item => item.id === row.id)
-    if (idx !== -1) tableData.list.splice(idx, 1)
-    tableData.totalCount -= 1
+async function handleDelete(row) {
+  try {
+    await ElMessageBox.confirm(`确定要删除学生「${row.name}」吗？`, '删除确认', {
+      confirmButtonText: '确定',
+      cancelButtonText: '取消',
+      type: 'warning',
+    })
+    await deleteStudent(row.id)
     ElMessage.success('删除成功')
-  }).catch(() => {})
+    fetchData()
+  } catch (e) {
+    // 取消操作或删除失败，错误由响应拦截器处理
+  }
 }
 
-function handleConfirm() {
+async function handleConfirm() {
   confirmLoading.value = true
-  setTimeout(() => {
-    confirmLoading.value = false
+  try {
+    if (isEditing.value) {
+      await updateStudent(editingId.value, { ...form })
+      ElMessage.success('编辑成功')
+    } else {
+      await createStudent({ ...form })
+      ElMessage.success('新增成功')
+    }
     dialogVisible.value = false
-    ElMessage.success(isEditing.value ? '编辑成功' : '新增成功')
     fetchData()
-  }, 800)
+  } catch (e) {
+    // 错误由响应拦截器统一处理
+  } finally {
+    confirmLoading.value = false
+  }
 }
 
 function handleImport() {
@@ -328,7 +326,48 @@ function handleExport() {
   ElMessage.success('导出成功（模拟）')
 }
 
-onMounted(fetchData)
+watch(() => form.departmentId, async (newVal) => {
+  if (newVal) {
+    try {
+      const res = await getMajorsByDepartment(newVal)
+      majorOptions.value = (res.data || []).map(m => ({ id: m.id, name: m.name }))
+    } catch (e) {
+      majorOptions.value = []
+    }
+  } else {
+    majorOptions.value = []
+    form.majorId = null
+  }
+})
+
+watch(() => searchForm.departmentId, async (newVal) => {
+  if (newVal) {
+    try {
+      const res = await getMajorsByDepartment(newVal)
+      majorOptions.value = (res.data || []).map(m => ({ id: m.id, name: m.name }))
+    } catch (e) {
+      majorOptions.value = []
+    }
+  } else {
+    majorOptions.value = []
+    searchForm.majorId = null
+  }
+})
+
+async function loadOptions() {
+  try {
+    const [deptRes, classRes] = await Promise.all([getDepartments(), getClasses()])
+    departmentOptions.value = (deptRes.data || []).map(d => ({ id: d.id, name: d.name }))
+    classOptions.value = (classRes.data || []).map(c => ({ id: c.id, name: c.name }))
+  } catch (e) {
+    // 错误由响应拦截器统一处理
+  }
+}
+
+onMounted(() => {
+  loadOptions()
+  fetchData()
+})
 </script>
 
 <style lang="scss" scoped>

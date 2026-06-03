@@ -114,6 +114,7 @@ import { ElMessage, ElMessageBox } from 'element-plus'
 import BaseDataTable from '@/components/BaseDataTable.vue'
 import BaseDialog from '@/components/BaseDialog.vue'
 import BaseDrawer from '@/components/BaseDrawer.vue'
+import { getAnnouncements, createAnnouncement, updateAnnouncement, deleteAnnouncement, togglePublish } from '@/api/announcement'
 
 const tableRef = ref(null)
 const loading = ref(false)
@@ -137,42 +138,20 @@ const columns = [
 
 const tableData = reactive({ totalCount: 0, pageSize: 15, pageNo: 1, pageTotal: 0, list: [] })
 
-function fetchData() {
+async function fetchData() {
   loading.value = true
-  setTimeout(() => {
-    const mockList = []
-    const titles = [
-      '关于2026年端午节放假安排的通知',
-      '关于开展期中教学检查工作的通知',
-      '智慧校园系统升级维护公告',
-      '关于2026届毕业生毕业典礼的通知',
-      '图书馆暑假开放时间调整通知',
-      '关于申报2026年度教学改革项目的通知',
-      '校园网络优化升级通知',
-    ]
-    const levels = ['普通', '重要', '紧急', '重要', '普通', '普通', '紧急']
-    const contents = [
-      '根据学校安排，现将2026年端午节放假有关事项通知如下：\n\n一、放假时间：6月25日至6月27日，共3天。\n二、请各部门做好节前安全检查工作。\n三、假期期间如遇紧急情况，请及时与学校值班人员联系。',
-      '各学院（部）：\n\n为全面了解本学期教学运行情况，学校决定在第12-13周开展期中教学检查工作。\n\n一、检查内容：课堂教学质量、教学进度执行情况、学生学习效果等。\n二、检查方式：学院自查与学校抽查相结合。\n三、请各学院于5月30日前提交自查报告。',
-      '尊敬的师生用户：\n\n智慧校园系统将于2026年6月5日22:00至6月6日06:00进行系统升级维护，届时部分功能将暂停使用。\n\n影响范围：\n1. 教务管理系统\n2. 学生选课系统\n3. 校园卡充值\n\n给您带来的不便，敬请谅解。',
-    ]
-    for (let i = 0; i < 15; i++) {
-      const idx = (tableData.pageNo - 1) * 15 + i
-      mockList.push({
-        id: idx + 1,
-        title: titles[idx % titles.length],
-        level: levels[idx % levels.length],
-        publisher: ['管理员', '教务处', '信息中心', '学生处', '图书馆'][idx % 5],
-        status: idx % 4 === 0 ? '草稿' : '已发布',
-        content: contents[idx % contents.length] || '公告内容',
-        createTime: '2026-05-' + String(10 + (idx % 20)).padStart(2, '0') + ' 10:00:00',
-      })
-    }
-    tableData.list = mockList
-    tableData.totalCount = 30
-    tableData.pageTotal = 2
+  try {
+    const params = { pageNo: tableData.pageNo, pageSize: tableData.pageSize }
+    if (searchForm.keyword) params.keyword = searchForm.keyword
+    if (searchForm.level) params.level = searchForm.level
+    if (searchForm.status) params.status = searchForm.status
+    const res = await getAnnouncements(params)
+    Object.assign(tableData, res.data)
+  } catch (e) {
+    // handled by interceptor
+  } finally {
     loading.value = false
-  }, 500)
+  }
 }
 
 function resetSearch() { searchForm.keyword = ''; searchForm.level = ''; searchForm.status = ''; fetchData() }
@@ -193,32 +172,52 @@ function handleView(row) {
   Object.assign(detailData, row)
   drawerVisible.value = true
 }
-function handleTogglePublish(row) {
+async function handleTogglePublish(row) {
   const action = row.status === '已发布' ? '下架' : '发布'
-  ElMessageBox.confirm(`确定${action}公告「${row.title}」？`, '确认', {
-    confirmButtonText: '确定', cancelButtonText: '取消', type: 'info',
-  }).then(() => {
-    row.status = row.status === '已发布' ? '草稿' : '已发布'
+  try {
+    await ElMessageBox.confirm(`确定${action}公告「${row.title}」？`, '确认', {
+      confirmButtonText: '确定', cancelButtonText: '取消', type: 'info',
+    })
+    await togglePublish(row.id)
     ElMessage.success(`${action}成功`)
-  }).catch(() => {})
-}
-function handleDelete(row) {
-  ElMessageBox.confirm(`确定删除公告「${row.title}」？`, '删除确认', {
-    confirmButtonText: '确定', cancelButtonText: '取消', type: 'warning',
-  }).then(() => {
-    const idx = tableData.list.findIndex(item => item.id === row.id)
-    if (idx !== -1) tableData.list.splice(idx, 1)
-    tableData.totalCount -= 1
-    ElMessage.success('删除成功')
-  }).catch(() => {})
-}
-function handleConfirm() {
-  confirmLoading.value = true
-  setTimeout(() => {
-    confirmLoading.value = false; dialogVisible.value = false
-    ElMessage.success(isEditing.value ? '编辑成功' : '发布成功')
     fetchData()
-  }, 800)
+  } catch (e) {
+    if (e !== 'cancel') {
+      // handled by interceptor
+    }
+  }
+}
+async function handleDelete(row) {
+  try {
+    await ElMessageBox.confirm(`确定删除公告「${row.title}」？`, '删除确认', {
+      confirmButtonText: '确定', cancelButtonText: '取消', type: 'warning',
+    })
+    await deleteAnnouncement(row.id)
+    ElMessage.success('删除成功')
+    fetchData()
+  } catch (e) {
+    if (e !== 'cancel') {
+      // handled by interceptor
+    }
+  }
+}
+async function handleConfirm() {
+  confirmLoading.value = true
+  try {
+    if (isEditing.value) {
+      await updateAnnouncement(editingId.value, { ...form })
+      ElMessage.success('编辑成功')
+    } else {
+      await createAnnouncement({ ...form })
+      ElMessage.success('发布成功')
+    }
+    dialogVisible.value = false
+    fetchData()
+  } catch (e) {
+    // handled by interceptor
+  } finally {
+    confirmLoading.value = false
+  }
 }
 onMounted(fetchData)
 </script>

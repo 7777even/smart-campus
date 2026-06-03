@@ -145,6 +145,8 @@ import { ElMessage, ElMessageBox } from 'element-plus'
 import BaseDataTable from '@/components/BaseDataTable.vue'
 import BaseDialog from '@/components/BaseDialog.vue'
 import BaseDrawer from '@/components/BaseDrawer.vue'
+import { getExercises, createExercise, updateExercise, deleteExercise } from '@/api/exercise'
+import { getCourses } from '@/api/common'
 
 const tableRef = ref(null)
 const loading = ref(false)
@@ -161,11 +163,8 @@ const form = reactive({
 })
 const detailData = reactive({})
 
-const courseOptions = [
-  { id: 1, name: '数据结构' }, { id: 2, name: '操作系统' },
-  { id: 3, name: '计算机网络' }, { id: 4, name: '高等数学' },
-]
-function getCourseName(id) { return courseOptions.find(c => c.id === id)?.name || '-' }
+const courseOptions = ref([])
+function getCourseName(id) { return courseOptions.value.find(c => c.id === id)?.name || '-' }
 
 function typeTag(t) {
   const map = { '单选题': 'primary', '多选题': 'success', '判断题': 'warning', '填空题': 'info', '简答题': 'danger' }
@@ -184,37 +183,21 @@ const columns = [
 
 const tableData = reactive({ totalCount: 0, pageSize: 15, pageNo: 1, pageTotal: 0, list: [] })
 
-function fetchData() {
+async function fetchData() {
   loading.value = true
-  setTimeout(() => {
-    const mockList = []
-    const questions = [
-      '以下哪个不是线性数据结构？', 'TCP/IP协议中IP层的作用是什么？', '操作系统的主要功能不包括？',
-      '以下排序算法中最优时间复杂度为O(n log n)的是？', '数据库事务的ACID特性中I指的是？',
-      '面向对象三大特性不包括？', 'HTTP状态码404的含义是？',
-    ]
-    const types = ['单选题', '多选题', '判断题', '单选题', '单选题', '多选题', '单选题']
-    const difficulties = ['简单', '中等', '困难', '中等', '简单', '中等', '简单']
-    const answers = ['B', 'ABC', '错', 'A', 'D', 'ABD', 'C']
-    for (let i = 0; i < 15; i++) {
-      const idx = (tableData.pageNo - 1) * 15 + i
-      mockList.push({
-        id: idx + 1,
-        courseId: [1, 2, 3, 4, 1, 1, 2][idx % 7] || 1,
-        question: questions[idx % 7],
-        type: types[idx % 7],
-        difficulty: difficulties[idx % 7],
-        optionA: '选项A内容', optionB: '选项B内容', optionC: '选项C内容', optionD: '选项D内容',
-        answer: answers[idx % 7],
-        analysis: '本题考查的是基础知识...',
-        createTime: '2026-03-0' + ((idx % 9) + 1) + ' 00:00:00',
-      })
-    }
-    tableData.list = mockList
-    tableData.totalCount = 35
-    tableData.pageTotal = 3
+  try {
+    const params = { pageNo: tableData.pageNo, pageSize: tableData.pageSize }
+    if (searchForm.keyword) params.keyword = searchForm.keyword
+    if (searchForm.type) params.type = searchForm.type
+    if (searchForm.difficulty) params.difficulty = searchForm.difficulty
+    if (searchForm.courseId) params.courseId = searchForm.courseId
+    const res = await getExercises(params)
+    Object.assign(tableData, res.data)
+  } catch (e) {
+    // handled by interceptor
+  } finally {
     loading.value = false
-  }, 500)
+  }
 }
 
 function resetSearch() { searchForm.keyword = ''; searchForm.type = ''; searchForm.difficulty = ''; searchForm.courseId = null; fetchData() }
@@ -237,26 +220,49 @@ function handleView(row) {
   Object.assign(detailData, row)
   drawerVisible.value = true
 }
-function handleDelete(row) {
-  ElMessageBox.confirm(`确定删除该习题？`, '删除确认', {
-    confirmButtonText: '确定', cancelButtonText: '取消', type: 'warning',
-  }).then(() => {
-    const idx = tableData.list.findIndex(item => item.id === row.id)
-    if (idx !== -1) tableData.list.splice(idx, 1)
-    tableData.totalCount -= 1
+async function handleDelete(row) {
+  try {
+    await ElMessageBox.confirm(`确定删除该习题？`, '删除确认', {
+      confirmButtonText: '确定', cancelButtonText: '取消', type: 'warning',
+    })
+    await deleteExercise(row.id)
     ElMessage.success('删除成功')
-  }).catch(() => {})
-}
-function handleConfirm() {
-  confirmLoading.value = true
-  setTimeout(() => {
-    confirmLoading.value = false; dialogVisible.value = false
-    ElMessage.success(isEditing.value ? '编辑成功' : '新增成功')
     fetchData()
-  }, 800)
+  } catch (e) {
+    if (e !== 'cancel') {
+      // handled by interceptor
+    }
+  }
+}
+async function handleConfirm() {
+  confirmLoading.value = true
+  try {
+    if (isEditing.value) {
+      await updateExercise(editingId.value, { ...form })
+      ElMessage.success('编辑成功')
+    } else {
+      await createExercise({ ...form })
+      ElMessage.success('新增成功')
+    }
+    dialogVisible.value = false
+    fetchData()
+  } catch (e) {
+    // handled by interceptor
+  } finally {
+    confirmLoading.value = false
+  }
 }
 function handleBatchImport() { ElMessage.info('批量导入（模拟）') }
-onMounted(fetchData)
+
+async function loadCourseOptions() {
+  try {
+    const res = await getCourses()
+    courseOptions.value = res.data || []
+  } catch (e) {
+    courseOptions.value = []
+  }
+}
+onMounted(() => { loadCourseOptions(); fetchData() })
 </script>
 
 <style lang="scss" scoped>

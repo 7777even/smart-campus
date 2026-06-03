@@ -134,6 +134,8 @@ import { ElMessage, ElMessageBox } from 'element-plus'
 import BaseDataTable from '@/components/BaseDataTable.vue'
 import BaseDialog from '@/components/BaseDialog.vue'
 import BaseDrawer from '@/components/BaseDrawer.vue'
+import { getPapers, createPaper, updatePaper, deletePaper, publishPaper } from '@/api/paper'
+import { getCourses } from '@/api/common'
 
 const tableRef = ref(null)
 const loading = ref(false)
@@ -151,11 +153,8 @@ const form = reactive({
 })
 const detailData = reactive({})
 
-const courseOptions = [
-  { id: 1, name: '数据结构' }, { id: 2, name: '操作系统' },
-  { id: 3, name: '计算机网络' }, { id: 4, name: '高等数学' },
-]
-function getCourseName(id) { return courseOptions.find(c => c.id === id)?.name || '-' }
+const courseOptions = ref([])
+function getCourseName(id) { return courseOptions.value.find(c => c.id === id)?.name || '-' }
 
 const columns = [
   { label: '试卷名称', prop: 'name', minWidth: 220 },
@@ -171,39 +170,20 @@ const columns = [
 
 const tableData = reactive({ totalCount: 0, pageSize: 15, pageNo: 1, pageTotal: 0, list: [] })
 
-function fetchData() {
+async function fetchData() {
   loading.value = true
-  setTimeout(() => {
-    const mockList = []
-    for (let i = 0; i < 15; i++) {
-      const idx = (tableData.pageNo - 1) * 15 + i
-      const singleC = 10 + (idx % 5) * 2
-      const multiC = 5 + (idx % 3)
-      const judgeC = 10 - (idx % 3)
-      mockList.push({
-        id: idx + 1,
-        name: ['数据结构期中考试', '操作系统期末考试', '计算机网络单元测试', '高等数学模拟考试', '数据结构期末', '操作系统期中', '网络原理测试'][idx % 7] + (idx >= 7 ? ` (${Math.floor(idx / 7) + 1})` : ''),
-        courseId: [1, 2, 3, 4, 1, 2, 3][idx % 7],
-        totalScore: 100,
-        passScore: 60,
-        duration: [90, 120, 60, 90, 120, 90, 60][idx % 7],
-        singleCount: singleC,
-        singleScore: 4,
-        multiCount: multiC,
-        multiScore: 4,
-        judgeCount: judgeC,
-        judgeScore: 2,
-        questionCount: singleC + multiC + judgeC,
-        status: idx % 3 === 0 ? '草稿' : '已发布',
-        createTime: '2026-04-0' + ((idx % 9) + 1) + ' 00:00:00',
-        description: '闭卷考试，请考生遵守考场纪律',
-      })
-    }
-    tableData.list = mockList
-    tableData.totalCount = 35
-    tableData.pageTotal = 3
+  try {
+    const params = { pageNo: tableData.pageNo, pageSize: tableData.pageSize }
+    if (searchForm.keyword) params.keyword = searchForm.keyword
+    if (searchForm.courseId) params.courseId = searchForm.courseId
+    if (searchForm.status) params.status = searchForm.status
+    const res = await getPapers(params)
+    Object.assign(tableData, res.data)
+  } catch (e) {
+    // handled by interceptor
+  } finally {
     loading.value = false
-  }, 500)
+  }
 }
 
 function resetSearch() { searchForm.keyword = ''; searchForm.courseId = null; searchForm.status = ''; fetchData() }
@@ -226,33 +206,62 @@ function handleView(row) {
   Object.assign(detailData, row)
   drawerVisible.value = true
 }
-function handlePublish(row) {
-  ElMessageBox.confirm(`确定发布试卷「${row.name}」？`, '发布确认', {
-    confirmButtonText: '确定', cancelButtonText: '取消', type: 'info',
-  }).then(() => {
-    row.status = '已发布'
+async function handlePublish(row) {
+  try {
+    await ElMessageBox.confirm(`确定发布试卷「${row.name}」？`, '发布确认', {
+      confirmButtonText: '确定', cancelButtonText: '取消', type: 'info',
+    })
+    await publishPaper(row.id)
     ElMessage.success('发布成功')
-  }).catch(() => {})
-}
-function handleDelete(row) {
-  ElMessageBox.confirm(`确定删除试卷「${row.name}」？`, '删除确认', {
-    confirmButtonText: '确定', cancelButtonText: '取消', type: 'warning',
-  }).then(() => {
-    const idx = tableData.list.findIndex(item => item.id === row.id)
-    if (idx !== -1) tableData.list.splice(idx, 1)
-    tableData.totalCount -= 1
-    ElMessage.success('删除成功')
-  }).catch(() => {})
-}
-function handleConfirm() {
-  confirmLoading.value = true
-  setTimeout(() => {
-    confirmLoading.value = false; dialogVisible.value = false
-    ElMessage.success(isEditing.value ? '编辑成功' : '创建成功')
     fetchData()
-  }, 800)
+  } catch (e) {
+    if (e !== 'cancel') {
+      // handled by interceptor
+    }
+  }
 }
-onMounted(fetchData)
+async function handleDelete(row) {
+  try {
+    await ElMessageBox.confirm(`确定删除试卷「${row.name}」？`, '删除确认', {
+      confirmButtonText: '确定', cancelButtonText: '取消', type: 'warning',
+    })
+    await deletePaper(row.id)
+    ElMessage.success('删除成功')
+    fetchData()
+  } catch (e) {
+    if (e !== 'cancel') {
+      // handled by interceptor
+    }
+  }
+}
+async function handleConfirm() {
+  confirmLoading.value = true
+  try {
+    if (isEditing.value) {
+      await updatePaper(editingId.value, { ...form })
+      ElMessage.success('编辑成功')
+    } else {
+      await createPaper({ ...form })
+      ElMessage.success('创建成功')
+    }
+    dialogVisible.value = false
+    fetchData()
+  } catch (e) {
+    // handled by interceptor
+  } finally {
+    confirmLoading.value = false
+  }
+}
+
+async function loadCourseOptions() {
+  try {
+    const res = await getCourses()
+    courseOptions.value = res.data || []
+  } catch (e) {
+    courseOptions.value = []
+  }
+}
+onMounted(() => { loadCourseOptions(); fetchData() })
 </script>
 
 <style lang="scss" scoped>

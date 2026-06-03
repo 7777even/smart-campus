@@ -118,6 +118,7 @@
 <script setup>
 import { ref, reactive, computed, onMounted } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
+import { getResources, updateResource, deleteResource, uploadResource } from '@/api/resource.js'
 import BaseDataTable from '@/components/BaseDataTable.vue'
 import BaseDialog from '@/components/BaseDialog.vue'
 
@@ -160,40 +161,38 @@ const columns = [
 
 const tableData = reactive({ totalCount: 0, pageSize: 15, pageNo: 1, pageTotal: 0, list: [] })
 
-function fetchData() {
+async function fetchData() {
   loading.value = true
-  setTimeout(() => {
-    const mockList = []
-    const types = ['视频', '文档', '文档', '图片', '视频', '文档', '音频', '其他']
-    const categories = ['课程资料', '课件', '习题', '参考书', '课件', '课程资料', '课件', '参考书']
-    const uploaders = ['张教授', '李教授', '王老师', '赵老师', '刘教授', '陈老师', '杨老师', '黄教授']
-    for (let i = 0; i < 15; i++) {
-      const idx = (tableData.pageNo - 1) * 15 + i
-      mockList.push({
-        id: idx + 1,
-        name: ['数据结构基础', '高等数学课件', '软件工程导论', '校园风光', 'Java程序设计', '论文模板', '英语听力', '实验报告'][idx % 8] + (idx >= 8 ? ` v${Math.floor(idx / 8) + 1}` : ''),
-        type: types[idx % 8],
-        category: categories[idx % 8],
-        fileSize: [500 * 1024 * 1024, 2.5 * 1024 * 1024, 1.2 * 1024 * 1024, 3.8 * 1024 * 1024, 800 * 1024 * 1024, 500 * 1024, 60 * 1024 * 1024, 200 * 1024][idx % 8],
-        uploader: uploaders[idx % 8],
-        status: idx % 4 === 0 ? 0 : 1,
-        createTime: '2026-03-0' + ((idx % 9) + 1) + ' 00:00:00',
-        description: '这是一份教学资源',
-      })
-    }
-    tableData.list = mockList
-    tableData.totalCount = 45
-    tableData.pageTotal = 3
+  try {
+    const params = { pageNo: tableData.pageNo, pageSize: tableData.pageSize }
+    if (searchForm.keyword) params.keyword = searchForm.keyword
+    if (searchForm.type) params.type = searchForm.type
+    if (searchForm.category) params.category = searchForm.category
+    const res = await getResources(params)
+    tableData.list = res.data.list || []
+    tableData.totalCount = res.data.totalCount || 0
+    tableData.pageTotal = res.data.pageTotal || Math.ceil((res.data.totalCount || 0) / tableData.pageSize) || 0
+  } catch (e) {
+    // 错误由响应拦截器统一处理
+  } finally {
     loading.value = false
-  }, 500)
+  }
 }
 
 function resetSearch() { searchForm.keyword = ''; searchForm.type = ''; searchForm.category = ''; fetchData() }
 function onPageChange({ pageNo, pageSize }) { tableData.pageNo = pageNo; tableData.pageSize = pageSize; fetchData() }
 function onSelectionChange(selection) { console.log('选中:', selection) }
 
-function handleUpload(file) {
-  ElMessage.success(`文件 "${file.name}" 上传成功（模拟）`)
+async function handleUpload(file) {
+  try {
+    const formData = new FormData()
+    formData.append('file', file)
+    await uploadResource(formData)
+    ElMessage.success(`文件 "${file.name}" 上传成功`)
+    fetchData()
+  } catch (e) {
+    // 错误由响应拦截器统一处理
+  }
   return false
 }
 
@@ -214,25 +213,31 @@ function handleDownload(row) {
   ElMessage.success(`正在下载「${row.name}」（模拟）`)
 }
 
-function handleDelete(row) {
-  ElMessageBox.confirm(`确定要删除资源「${row.name}」吗？`, '删除确认', {
-    confirmButtonText: '确定', cancelButtonText: '取消', type: 'warning',
-  }).then(() => {
-    const idx = tableData.list.findIndex(item => item.id === row.id)
-    if (idx !== -1) tableData.list.splice(idx, 1)
-    tableData.totalCount -= 1
+async function handleDelete(row) {
+  try {
+    await ElMessageBox.confirm(`确定要删除资源「${row.name}」吗？`, '删除确认', {
+      confirmButtonText: '确定', cancelButtonText: '取消', type: 'warning',
+    })
+    await deleteResource(row.id)
     ElMessage.success('删除成功')
-  }).catch(() => {})
+    fetchData()
+  } catch (e) {
+    // 取消操作或删除失败，错误由响应拦截器处理
+  }
 }
 
-function handleConfirm() {
+async function handleConfirm() {
   confirmLoading.value = true
-  setTimeout(() => {
-    confirmLoading.value = false
-    dialogVisible.value = false
+  try {
+    await updateResource(editingId.value, { ...form })
     ElMessage.success('编辑成功')
+    dialogVisible.value = false
     fetchData()
-  }, 800)
+  } catch (e) {
+    // 错误由响应拦截器统一处理
+  } finally {
+    confirmLoading.value = false
+  }
 }
 
 onMounted(fetchData)

@@ -109,11 +109,13 @@
 </template>
 
 <script setup>
-import { ref, reactive, computed, onMounted } from 'vue'
+import { ref, reactive, watch, onMounted } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import BaseDataTable from '@/components/BaseDataTable.vue'
 import BaseDialog from '@/components/BaseDialog.vue'
 import BaseDrawer from '@/components/BaseDrawer.vue'
+import { getClasses, createClass, updateClass, deleteClass } from '@/api/class'
+import { getDepartments, getMajorsByDepartment } from '@/api/common'
 
 const tableRef = ref(null)
 const loading = ref(false)
@@ -142,27 +144,15 @@ const form = reactive({
 
 const detailData = reactive({})
 
-const departmentOptions = [
-  { id: 1, name: '计算机科学与技术学院' },
-  { id: 2, name: '数学与统计学院' },
-  { id: 3, name: '外国语学院' },
-]
+const departmentOptions = ref([])
 
-const majorOptions = [
-  { id: 1, name: '软件工程', departmentId: 1 },
-  { id: 2, name: '计算机科学与技术', departmentId: 1 },
-  { id: 3, name: '数据科学', departmentId: 1 },
-  { id: 4, name: '数学与应用数学', departmentId: 2 },
-  { id: 5, name: '信息与计算科学', departmentId: 2 },
-  { id: 6, name: '英语', departmentId: 3 },
-  { id: 7, name: '翻译', departmentId: 3 },
-]
+const majorOptions = ref([])
 
 function getDeptName(id) {
-  return departmentOptions.find(d => d.id === id)?.name || '-'
+  return departmentOptions.value.find(d => d.id === id)?.name || '-'
 }
 function getMajorName(id) {
-  return majorOptions.find(m => m.id === id)?.name || '-'
+  return majorOptions.value.find(m => m.id === id)?.name || '-'
 }
 
 const columns = [
@@ -185,32 +175,18 @@ const tableData = reactive({
   list: [],
 })
 
-function fetchData() {
+async function fetchData() {
   loading.value = true
-  setTimeout(() => {
-    const mockList = []
-    const classNames = ['软件工程1班', '软件工程2班', '计算机科学与技术1班', '数据科学1班', '数学1班', '英语1班', '翻译1班', '网络工程1班']
-    for (let i = 0; i < 15; i++) {
-      const idx = (tableData.pageNo - 1) * 15 + i
-      mockList.push({
-        id: idx + 1,
-        name: classNames[idx % classNames.length] + (idx >= classNames.length ? `(${Math.floor(idx / classNames.length) + 2026})` : ''),
-        code: 'CL' + String(idx + 1).padStart(3, '0'),
-        departmentId: [1, 1, 1, 1, 2, 3, 3, 1][idx % 8],
-        majorId: [1, 1, 2, 3, 4, 6, 7, 8][idx % 8],
-        year: 2026 - (idx % 4),
-        studentCount: 30 + (idx % 30),
-        status: idx % 5 === 0 ? 0 : 1,
-        sort: idx + 1,
-        createTime: '2026-02-0' + ((idx % 9) + 1) + ' 00:00:00',
-        description: '',
-      })
-    }
-    tableData.list = mockList
-    tableData.totalCount = 45
-    tableData.pageTotal = 3
+  try {
+    const params = { pageNo: tableData.pageNo, pageSize: tableData.pageSize }
+    if (searchForm.keyword) params.keyword = searchForm.keyword
+    if (searchForm.departmentId) params.departmentId = searchForm.departmentId
+    if (searchForm.majorId) params.majorId = searchForm.majorId
+    const res = await getClasses(params)
+    Object.assign(tableData, res.data)
+  } finally {
     loading.value = false
-  }, 500)
+  }
 }
 
 function resetSearch() {
@@ -256,30 +232,70 @@ function handleView(row) {
   drawerVisible.value = true
 }
 
-function handleDelete(row) {
-  ElMessageBox.confirm(`确定要删除「${row.name}」吗？`, '删除确认', {
-    confirmButtonText: '确定',
-    cancelButtonText: '取消',
-    type: 'warning',
-  }).then(() => {
-    const idx = tableData.list.findIndex(item => item.id === row.id)
-    if (idx !== -1) tableData.list.splice(idx, 1)
-    tableData.totalCount -= 1
+async function handleDelete(row) {
+  try {
+    await ElMessageBox.confirm(`确定要删除「${row.name}」吗？`, '删除确认', {
+      confirmButtonText: '确定',
+      cancelButtonText: '取消',
+      type: 'warning',
+    })
+    await deleteClass(row.id)
     ElMessage.success('删除成功')
-  }).catch(() => {})
-}
-
-function handleConfirm() {
-  confirmLoading.value = true
-  setTimeout(() => {
-    confirmLoading.value = false
-    dialogVisible.value = false
-    ElMessage.success(isEditing.value ? '编辑成功' : '新增成功')
     fetchData()
-  }, 800)
+  } catch (e) {
+    // cancelled or error
+  }
 }
 
-onMounted(fetchData)
+async function handleConfirm() {
+  confirmLoading.value = true
+  try {
+    if (isEditing.value) {
+      await updateClass(editingId.value, { ...form })
+      ElMessage.success('更新成功')
+    } else {
+      await createClass({ ...form })
+      ElMessage.success('新增成功')
+    }
+    dialogVisible.value = false
+    fetchData()
+  } finally {
+    confirmLoading.value = false
+  }
+}
+
+async function fetchMajors(departmentId) {
+  if (!departmentId) {
+    majorOptions.value = []
+    return
+  }
+  try {
+    const res = await getMajorsByDepartment(departmentId)
+    majorOptions.value = res.data || []
+  } catch (e) {
+    majorOptions.value = []
+  }
+}
+
+watch(() => searchForm.departmentId, (val) => {
+  searchForm.majorId = null
+  fetchMajors(val)
+})
+
+watch(() => form.departmentId, (val) => {
+  form.majorId = null
+  fetchMajors(val)
+})
+
+onMounted(async () => {
+  try {
+    const res = await getDepartments()
+    departmentOptions.value = res.data || []
+  } catch (e) {
+    departmentOptions.value = []
+  }
+  fetchData()
+})
 </script>
 
 <style lang="scss" scoped>

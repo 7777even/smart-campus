@@ -3,7 +3,7 @@
     <div class="page-header">
       <h2 class="page-title">院系管理</h2>
       <div class="page-header__actions">
-        <el-button type="primary" @click="dialogVisible = true">新增院系</el-button>
+        <el-button type="primary" @click="openAddDialog">新增院系</el-button>
       </div>
     </div>
     <BaseDataTable
@@ -111,6 +111,7 @@ import { ElMessage, ElMessageBox } from 'element-plus'
 import BaseDataTable from '@/components/BaseDataTable.vue'
 import BaseDialog from '@/components/BaseDialog.vue'
 import BaseDrawer from '@/components/BaseDrawer.vue'
+import { getDepartments, createDepartment, updateDepartment, deleteDepartment } from '@/api/department'
 
 const tableRef = ref(null)
 const loading = ref(false)
@@ -118,6 +119,8 @@ const dialogVisible = ref(false)
 const confirmLoading = ref(false)
 const drawerVisible = ref(false)
 const drawerConfirmLoading = ref(false)
+const isEditing = ref(false)
+const editingId = ref(null)
 
 const form = reactive({
   name: '',
@@ -158,29 +161,19 @@ const tableData = reactive({
   list: [],
 })
 
-// 模拟数据
-function fetchData() {
+async function fetchData() {
   loading.value = true
-  setTimeout(() => {
-    const mockList = []
-    for (let i = 0; i < 15; i++) {
-      mockList.push({
-        id: i + 1,
-        name: '计算机科学与技术学院',
-        code: 'CS' + String(i + 1).padStart(3, '0'),
-        leader: '张教授',
-        phone: '13800138000',
-        status: i % 5 === 0 ? 0 : 1,
-        sort: i + 1,
-        createTime: '2026-01-01 00:00:00',
-        description: '负责计算机相关专业教学与科研',
-      })
-    }
-    tableData.list = mockList
-    tableData.totalCount = 45
-    tableData.pageTotal = 3
+  try {
+    const res = await getDepartments({
+      pageNo: tableData.pageNo,
+      pageSize: tableData.pageSize,
+    })
+    Object.assign(tableData, res.data)
+  } catch (e) {
+    // error handled by interceptor
+  } finally {
     loading.value = false
-  }, 500)
+  }
 }
 
 function onPageChange({ pageNo, pageSize }) {
@@ -193,7 +186,21 @@ function onSelectionChange(selection) {
   console.log('选中行:', selection)
 }
 
+function openAddDialog() {
+  isEditing.value = false
+  editingId.value = null
+  form.name = ''
+  form.code = ''
+  form.leader = ''
+  form.phone = ''
+  form.sort = 0
+  form.description = ''
+  dialogVisible.value = true
+}
+
 function handleEdit(row) {
+  isEditing.value = true
+  editingId.value = row.id
   Object.assign(form, row)
   dialogVisible.value = true
 }
@@ -203,40 +210,54 @@ function handleView(row) {
   drawerVisible.value = true
 }
 
-function handleDelete(row) {
-  ElMessageBox.confirm(
-    `确定要删除「${row.name}」吗？`,
-    '删除确认',
-    {
-      confirmButtonText: '确定',
-      cancelButtonText: '取消',
-      type: 'warning',
+async function handleDelete(row) {
+  try {
+    await ElMessageBox.confirm(
+      `确定要删除「${row.name}」吗？`,
+      '删除确认',
+      { confirmButtonText: '确定', cancelButtonText: '取消', type: 'warning' }
+    )
+    await deleteDepartment(row.id)
+    ElMessage.success('删除成功')
+    fetchData()
+  } catch (e) {
+    if (e !== 'cancel') {
+      // error handled by interceptor or already shown
     }
-  )
-    .then(() => {
-      // 模拟删除 — 从本地列表移除
-      const idx = tableData.list.findIndex((item) => item.id === row.id)
-      if (idx !== -1) tableData.list.splice(idx, 1)
-      tableData.totalCount -= 1
-      ElMessage.success('删除成功')
-    })
-    .catch(() => {})
+  }
 }
 
-function handleConfirm() {
+async function handleConfirm() {
   confirmLoading.value = true
-  setTimeout(() => {
-    confirmLoading.value = false
+  try {
+    if (isEditing.value) {
+      await updateDepartment(editingId.value, { ...form })
+      ElMessage.success('更新成功')
+    } else {
+      await createDepartment({ ...form })
+      ElMessage.success('新增成功')
+    }
     dialogVisible.value = false
-  }, 1500)
+    fetchData()
+  } catch (e) {
+    // error handled by interceptor
+  } finally {
+    confirmLoading.value = false
+  }
 }
 
-function handleDrawerConfirm() {
+async function handleDrawerConfirm() {
   drawerConfirmLoading.value = true
-  setTimeout(() => {
-    drawerConfirmLoading.value = false
+  try {
+    await updateDepartment(drawerForm.id, { ...drawerForm })
+    ElMessage.success('更新成功')
     drawerVisible.value = false
-  }, 1500)
+    fetchData()
+  } catch (e) {
+    // error handled by interceptor
+  } finally {
+    drawerConfirmLoading.value = false
+  }
 }
 
 onMounted(fetchData)

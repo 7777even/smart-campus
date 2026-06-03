@@ -2,6 +2,12 @@ import { createRouter, createWebHistory } from 'vue-router'
 
 const routes = [
   {
+    path: '/login',
+    name: '登录',
+    component: () => import('@/views/login/Index.vue'),
+    meta: { noAuth: true },
+  },
+  {
     path: '/',
     component: () => import('@/components/AdminLayout.vue'),
     redirect: '/dashboard',
@@ -19,13 +25,27 @@ const routes = [
       { path: 'exams', name: '考试管理', component: () => import('@/views/exams/Index.vue') },
       { path: 'announcements', name: '公告管理', component: () => import('@/views/announcements/Index.vue') },
       { path: 'permissions', name: '权限管理', component: () => import('@/views/permissions/Index.vue') },
-    ]
-  }
+    ],
+  },
 ]
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
   routes,
+})
+
+// 路由守卫 — 未登录跳转登录页
+router.beforeEach((to, from, next) => {
+  if (to.meta?.noAuth) {
+    next()
+    return
+  }
+  const token = localStorage.getItem('token')
+  if (!token) {
+    next('/login')
+  } else {
+    next()
+  }
 })
 
 export default router

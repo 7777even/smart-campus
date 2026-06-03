@@ -215,7 +215,7 @@
 </template>
 
 <script setup>
-import { ref, onMounted, onUnmounted, nextTick } from 'vue'
+import { ref, reactive, computed, onMounted, onUnmounted, nextTick } from 'vue'
 import * as echarts from 'echarts'
 import {
   UserFilled,
@@ -231,9 +231,16 @@ import {
   Monitor
 } from '@element-plus/icons-vue'
 import StatCard from '@/components/StatCard.vue'
-import { getDashboardData } from './mockData.js'
+import { getOverview, getTeachingStats, getStudentStats, getResourceStats, getExamStats, getSystemStats } from '@/api/dashboard'
 
-const data = getDashboardData()
+const data = reactive({
+  overview: { totalStudents: 0, totalTeachers: 0, totalDepartments: 0, totalMajors: 0, totalClasses: 0, totalCourses: 0 },
+  teaching: { semesterCourses: 0, completedExams: 0, pendingExams: 0, teacherWorkload: [] },
+  studentDistribution: { departments: [], grades: [], gender: { male: 0, female: 0 }, growth: [] },
+  resource: { total: 0, totalDownloads: 0, uploadTrend: [], hotResources: [] },
+  exam: { passRate: 0, excellenceRate: 0, countTrend: [], avgScores: [] },
+  system: { onlineUsers: 0, todayLogins: 0, weeklyActive: 0, cpuUsage: 0, memoryUsage: 0, diskUsage: 0, status: 'normal', services: [] }
+})
 
 // -------------------- helpers --------------------
 let chartInstances = []
@@ -270,21 +277,21 @@ const axisColor = '#9ca3af'
 const splitColor = '#f0f0f0'
 
 // -------------------- 1. overview --------------------
-const overviewStats = [
+const overviewStats = computed(() => [
   { label: '学生总人数', value: data.overview.totalStudents, unit: '人', icon: UserFilled, bgStart: '#409EFF', bgEnd: '#36D1DC' },
   { label: '教师总人数', value: data.overview.totalTeachers, unit: '人', icon: Reading, bgStart: '#667EEA', bgEnd: '#764BA2' },
   { label: '院系数量', value: data.overview.totalDepartments, unit: '个', icon: OfficeBuilding, bgStart: '#F093FB', bgEnd: '#F5576C' },
   { label: '专业数量', value: data.overview.totalMajors, unit: '个', icon: Collection, bgStart: '#4FACFE', bgEnd: '#00F2FE' },
   { label: '班级数量', value: data.overview.totalClasses, unit: '个', icon: School, bgStart: '#43E97B', bgEnd: '#38F9D7' },
   { label: '课程数量', value: data.overview.totalCourses, unit: '门', icon: Notebook, bgStart: '#FA709A', bgEnd: '#FEE140' }
-]
+])
 
 // -------------------- 2. teaching --------------------
-const teachingStats = [
+const teachingStats = computed(() => [
   { label: '本学期开课', value: data.teaching.semesterCourses, unit: '门' },
   { label: '已完成考试', value: data.teaching.completedExams, unit: '场' },
   { label: '待进行考试', value: data.teaching.pendingExams, unit: '场' }
-]
+])
 
 const teacherChartRef = ref(null)
 
@@ -305,12 +312,12 @@ const avgScoreRef = ref(null)
 
 // -------------------- 6. system --------------------
 const systemData = data.system
-const systemStats = [
+const systemStats = computed(() => [
   { label: '在线用户', value: systemData.onlineUsers, unit: '人', icon: UserFilled, bgStart: '#409EFF', bgEnd: '#36D1DC' },
   { label: '今日登录', value: systemData.todayLogins, unit: '人', icon: TrendCharts, bgStart: '#667EEA', bgEnd: '#764BA2' },
   { label: '本周活跃', value: systemData.weeklyActive, unit: '人', icon: DataLine, bgStart: '#43E97B', bgEnd: '#38F9D7' },
   { label: '系统可用率', value: 99.9, unit: '%', icon: Monitor, bgStart: '#F093FB', bgEnd: '#F5576C' }
-]
+])
 
 // -------------------- chart options --------------------
 function getTeacherOption() {
@@ -476,6 +483,24 @@ function getAvgScoreOption() {
 
 // -------------------- lifecycle --------------------
 onMounted(async () => {
+  try {
+    const [overviewRes, teachingRes, studentRes, resourceRes, examRes, systemRes] = await Promise.all([
+      getOverview(),
+      getTeachingStats(),
+      getStudentStats(),
+      getResourceStats(),
+      getExamStats(),
+      getSystemStats()
+    ])
+    if (overviewRes.data) Object.assign(data.overview, overviewRes.data)
+    if (teachingRes.data) Object.assign(data.teaching, teachingRes.data)
+    if (studentRes.data) Object.assign(data.studentDistribution, studentRes.data)
+    if (resourceRes.data) Object.assign(data.resource, resourceRes.data)
+    if (examRes.data) Object.assign(data.exam, examRes.data)
+    if (systemRes.data) Object.assign(data.system, systemRes.data)
+  } catch (e) {
+    console.error('获取数据看板失败', e)
+  }
   await nextTick()
   initChart(teacherChartRef.value, getTeacherOption())
   initChart(deptChartRef.value, getDeptOption())

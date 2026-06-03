@@ -129,6 +129,8 @@
 <script setup>
 import { ref, reactive, onMounted } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
+import { getCourses, createCourse, updateCourse, deleteCourse } from '@/api/course.js'
+import { getDepartments, getTeachers } from '@/api/common.js'
 import BaseDataTable from '@/components/BaseDataTable.vue'
 import BaseCover from '@/components/BaseCover.vue'
 import BaseDialog from '@/components/BaseDialog.vue'
@@ -146,17 +148,11 @@ const searchForm = reactive({ keyword: '', departmentId: null, type: '', credit:
 const form = reactive({ name: '', code: '', departmentId: null, teacherId: null, type: '选修', credit: 3, hours: 48, location: '', description: '' })
 const detailData = reactive({})
 
-const departmentOptions = [
-  { id: 1, name: '计算机科学与技术学院' },
-  { id: 2, name: '数学与统计学院' },
-  { id: 3, name: '外国语学院' },
-]
-const teacherOptions = [
-  { id: 1, name: '张教授' }, { id: 2, name: '李教授' }, { id: 3, name: '王老师' },
-  { id: 4, name: '赵老师' }, { id: 5, name: '刘教授' }, { id: 6, name: '陈老师' },
-]
-function getDeptName(id) { return departmentOptions.find(d => d.id === id)?.name || '-' }
-function getTeacherName(id) { return teacherOptions.find(t => t.id === id)?.name || '-' }
+const departmentOptions = ref([])
+const teacherOptions = ref([])
+
+function getDeptName(id) { return departmentOptions.value.find(d => d.id === id)?.name || '-' }
+function getTeacherName(id) { return teacherOptions.value.find(t => t.id === id)?.name || '-' }
 
 const columns = [
   { label: '课程名称', prop: 'name', width: 200 },
@@ -173,35 +169,23 @@ const columns = [
 
 const tableData = reactive({ totalCount: 0, pageSize: 15, pageNo: 1, pageTotal: 0, list: [] })
 
-function fetchData() {
+async function fetchData() {
   loading.value = true
-  setTimeout(() => {
-    const mockList = []
-    const names = ['数据结构', '操作系统', '计算机网络', '软件工程', '高等数学', '线性代数', '大学英语', 'Java程序设计', '数据库原理', '人工智能', '编译原理', '计算机组成原理']
-    const types = ['必修', '选修', '公共']
-    for (let i = 0; i < 15; i++) {
-      const idx = (tableData.pageNo - 1) * 15 + i
-      mockList.push({
-        id: idx + 1,
-        name: names[idx % names.length],
-        code: 'CS' + String(idx + 100).padStart(4, '0'),
-        departmentId: [1, 1, 1, 1, 2, 2, 3, 1, 1, 1, 1, 1][idx % 12],
-        teacherId: [1, 2, 3, 4, 5, 6, 1, 2, 3, 4, 5, 6][idx % 12],
-        teacherName: getTeacherName([1, 2, 3, 4, 5, 6, 1, 2, 3, 4, 5, 6][idx % 12]),
-        type: types[idx % 3],
-        credit: [3, 4, 3, 2, 5, 3, 2, 4, 3, 3, 4, 4][idx % 12],
-        hours: [48, 64, 48, 32, 80, 48, 32, 64, 48, 48, 64, 64][idx % 12],
-        location: ['教学楼301', '机房201', '教学楼105', '教学楼203', '教室A101', '教室B202', '语音室', '机房205'][idx % 8],
-        status: idx % 4 === 0 ? 0 : 1,
-        createTime: '2026-02-0' + ((idx % 9) + 1) + ' 00:00:00',
-        description: '本课程是...',
-      })
-    }
-    tableData.list = mockList
-    tableData.totalCount = 48
-    tableData.pageTotal = 4
+  try {
+    const params = { pageNo: tableData.pageNo, pageSize: tableData.pageSize }
+    if (searchForm.keyword) params.keyword = searchForm.keyword
+    if (searchForm.departmentId) params.departmentId = searchForm.departmentId
+    if (searchForm.type) params.type = searchForm.type
+    if (searchForm.credit) params.credit = searchForm.credit
+    const res = await getCourses(params)
+    tableData.list = res.data.list || []
+    tableData.totalCount = res.data.totalCount || 0
+    tableData.pageTotal = res.data.pageTotal || Math.ceil((res.data.totalCount || 0) / tableData.pageSize) || 0
+  } catch (e) {
+    // 错误由响应拦截器统一处理
+  } finally {
     loading.value = false
-  }, 500)
+  }
 }
 
 function resetSearch() { searchForm.keyword = ''; searchForm.departmentId = null; searchForm.type = ''; searchForm.credit = null; fetchData() }
@@ -223,25 +207,51 @@ function handleView(row) {
   Object.assign(detailData, row)
   drawerVisible.value = true
 }
-function handleDelete(row) {
-  ElMessageBox.confirm(`确定要删除课程「${row.name}」吗？`, '删除确认', {
-    confirmButtonText: '确定', cancelButtonText: '取消', type: 'warning',
-  }).then(() => {
-    const idx = tableData.list.findIndex(item => item.id === row.id)
-    if (idx !== -1) tableData.list.splice(idx, 1)
-    tableData.totalCount -= 1
+async function handleDelete(row) {
+  try {
+    await ElMessageBox.confirm(`确定要删除课程「${row.name}」吗？`, '删除确认', {
+      confirmButtonText: '确定', cancelButtonText: '取消', type: 'warning',
+    })
+    await deleteCourse(row.id)
     ElMessage.success('删除成功')
-  }).catch(() => {})
-}
-function handleConfirm() {
-  confirmLoading.value = true
-  setTimeout(() => {
-    confirmLoading.value = false; dialogVisible.value = false
-    ElMessage.success(isEditing.value ? '编辑成功' : '新增成功')
     fetchData()
-  }, 800)
+  } catch (e) {
+    // 取消操作或删除失败，错误由响应拦截器处理
+  }
 }
-onMounted(fetchData)
+async function handleConfirm() {
+  confirmLoading.value = true
+  try {
+    if (isEditing.value) {
+      await updateCourse(editingId.value, { ...form })
+      ElMessage.success('编辑成功')
+    } else {
+      await createCourse({ ...form })
+      ElMessage.success('新增成功')
+    }
+    dialogVisible.value = false
+    fetchData()
+  } catch (e) {
+    // 错误由响应拦截器统一处理
+  } finally {
+    confirmLoading.value = false
+  }
+}
+
+async function loadOptions() {
+  try {
+    const [deptRes, teacherRes] = await Promise.all([getDepartments(), getTeachers()])
+    departmentOptions.value = (deptRes.data || []).map(d => ({ id: d.id, name: d.name }))
+    teacherOptions.value = (teacherRes.data || []).map(t => ({ id: t.id, name: t.name }))
+  } catch (e) {
+    // 错误由响应拦截器统一处理
+  }
+}
+
+onMounted(() => {
+  loadOptions()
+  fetchData()
+})
 </script>
 
 <style lang="scss" scoped>
