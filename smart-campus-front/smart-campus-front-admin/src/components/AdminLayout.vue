@@ -42,6 +42,15 @@ const menuData = [
     ]
   },
   {
+    name: 'AI 智能',
+    key: 'ai',
+    children: [
+      { name: 'AI 助教', path: '/ai/chat' },
+      { name: '知识库', path: '/ai/knowledge' },
+      { name: '学业预警', path: '/ai/warning' }
+    ]
+  },
+  {
     name: '系统管理',
     key: 'system',
     children: [

@@ -23,8 +23,6 @@ spring:
   #elasticsearch相关
   elasticsearch:
     uris: http://localhost:9200
-    #username: elastic  # 如果启用了安全认证
-    #password: your_password
 mybatis:
   mapper-locations: classpath:/mappers/*.xml
   configuration:
@@ -42,3 +40,21 @@ resource:
 log:
   root:
     level: debug
+
+# AI 功能配置
+ai:
+  llm:
+    api-key: ${AI_API_KEY:sk-placeholder}
+    base-url: ${AI_BASE_URL:https://api.deepseek.com}
+    model: ${AI_MODEL:deepseek-chat}
+  chat:
+    max-history: 20
+    max-tokens: 2048
+  warning:
+    attendance-threshold: 0.7
+    homework-threshold: 60
+    exam-threshold: 60
+    red-attendance-threshold: 0.5
+    red-homework-threshold: 40
+    red-exam-threshold: 40
+    calc-cron: "0 0 3 * * ?"

@@ -312,3 +312,88 @@ CREATE TABLE `biz_student_course` (
     PRIMARY KEY (`id`),
     UNIQUE KEY `uk_student_course` (`student_id`, `course_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='学生选课';
+
+-- ============================================================
+-- 5. AI 与智能
+-- ============================================================
+
+CREATE TABLE `ai_conversation` (
+    `id`          BIGINT       NOT NULL AUTO_INCREMENT COMMENT '主键',
+    `user_id`     BIGINT       NOT NULL COMMENT '用户ID',
+    `user_role`   VARCHAR(32)  NOT NULL COMMENT '用户角色',
+    `title`       VARCHAR(256) DEFAULT NULL COMMENT '对话标题',
+    `create_time` DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+    `update_time` DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
+    PRIMARY KEY (`id`),
+    KEY `idx_user_id` (`user_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='AI 对话记录';
+
+CREATE TABLE `ai_message` (
+    `id`              BIGINT       NOT NULL AUTO_INCREMENT COMMENT '主键',
+    `conversation_id` BIGINT       NOT NULL COMMENT '对话ID',
+    `role`            VARCHAR(16)  NOT NULL COMMENT '角色: user/assistant/system',
+    `content`         TEXT         NOT NULL COMMENT '消息内容',
+    `tokens`          INT          DEFAULT NULL COMMENT 'Token 数',
+    `create_time`     DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+    PRIMARY KEY (`id`),
+    KEY `idx_conversation_id` (`conversation_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='AI 对话消息';
+
+CREATE TABLE `ai_knowledge_doc` (
+    `id`          BIGINT       NOT NULL AUTO_INCREMENT COMMENT '主键',
+    `title`       VARCHAR(256) NOT NULL COMMENT '文档标题',
+    `content`     TEXT         NOT NULL COMMENT '文档内容',
+    `category`    VARCHAR(64)  DEFAULT NULL COMMENT '分类',
+    `tags`        VARCHAR(512) DEFAULT NULL COMMENT '标签(逗号分隔)',
+    `status`      TINYINT      NOT NULL DEFAULT 1 COMMENT '状态: 1启用 0禁用',
+    `uploader`    VARCHAR(64)  DEFAULT NULL COMMENT '上传者',
+    `create_time` DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+    `update_time` DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
+    PRIMARY KEY (`id`),
+    KEY `idx_category` (`category`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='AI 知识库文档';
+
+CREATE TABLE `ai_student_profile` (
+    `id`                  BIGINT       NOT NULL AUTO_INCREMENT COMMENT '主键',
+    `student_id`          BIGINT       NOT NULL COMMENT '学生ID',
+    `student_no`          VARCHAR(32)  NOT NULL COMMENT '学号',
+    `student_name`        VARCHAR(64)  NOT NULL COMMENT '学生姓名',
+    `class_id`            BIGINT       DEFAULT NULL COMMENT '班级ID',
+    `major_id`            BIGINT       DEFAULT NULL COMMENT '专业ID',
+    `department_id`       BIGINT       DEFAULT NULL COMMENT '院系ID',
+    `gpa`                 DECIMAL(4,2) DEFAULT NULL COMMENT 'GPA',
+    `attendance_rate`     DECIMAL(5,2) DEFAULT NULL COMMENT '出勤率(%)',
+    `homework_avg`        DECIMAL(5,2) DEFAULT NULL COMMENT '作业平均分',
+    `exam_avg`            DECIMAL(5,2) DEFAULT NULL COMMENT '考试平均分',
+    `comprehensive_score` DECIMAL(5,2) DEFAULT NULL COMMENT '综合评分',
+    `risk_level`          VARCHAR(8)   DEFAULT 'green' COMMENT '风险等级: red/yellow/green',
+    `trend`               VARCHAR(16)  DEFAULT 'stable' COMMENT '趋势: up/down/stable',
+    `last_calc_time`      DATETIME     DEFAULT NULL COMMENT '最近计算时间',
+    `create_time`         DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+    `update_time`         DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
+    PRIMARY KEY (`id`),
+    UNIQUE KEY `uk_student_id` (`student_id`),
+    KEY `idx_risk_level` (`risk_level`),
+    KEY `idx_department_id` (`department_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='学生学业画像';
+
+CREATE TABLE `ai_early_warning` (
+    `id`           BIGINT       NOT NULL AUTO_INCREMENT COMMENT '主键',
+    `student_id`   BIGINT       NOT NULL COMMENT '学生ID',
+    `profile_id`   BIGINT       NOT NULL COMMENT '画像ID',
+    `warning_type` VARCHAR(32)  NOT NULL COMMENT '预警类型: attendance/homework/exam/comprehensive',
+    `level`        VARCHAR(8)   NOT NULL COMMENT '等级: red/yellow',
+    `score`        DECIMAL(5,2) DEFAULT NULL COMMENT '触发分值',
+    `threshold`    DECIMAL(5,2) DEFAULT NULL COMMENT '阈值',
+    `description`  VARCHAR(512) DEFAULT NULL COMMENT '描述',
+    `suggestion`   VARCHAR(512) DEFAULT NULL COMMENT 'AI 干预建议',
+    `status`       VARCHAR(16)  NOT NULL DEFAULT 'pending' COMMENT '状态: pending/resolved/ignored',
+    `resolver`     VARCHAR(64)  DEFAULT NULL COMMENT '处理人',
+    `resolve_time` DATETIME     DEFAULT NULL COMMENT '处理时间',
+    `create_time`  DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+    `update_time`  DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
+    PRIMARY KEY (`id`),
+    KEY `idx_student_id` (`student_id`),
+    KEY `idx_level` (`level`),
+    KEY `idx_status` (`status`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='学业预警记录';

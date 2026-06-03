@@ -24,6 +24,10 @@
 13. [权限管理](#13-权限管理)
 14. [数据看板](#14-数据看板)
 15. [通用字典接口](#15-通用字典接口)
+16. [AI 对话](#16-ai-对话)
+17. [AI 知识库](#17-ai-知识库)
+18. [学业画像](#18-学业画像)
+19. [学业预警](#19-学业预警)
 
 ---
 
@@ -511,6 +515,132 @@
 
 ### GET /api/common/courses
 获取所有课程列表
+
+---
+
+## 16. AI 对话
+
+### POST /api/ai/chat/create
+创建新对话（需 JWT 认证）
+
+**Request Body:**
+```json
+{
+  "title": "咨询选课问题"
+}
+```
+
+**Response:**
+```json
+{
+  "code": 200,
+  "data": {
+    "id": 1,
+    "userId": 1,
+    "userRole": "admin",
+    "title": "咨询选课问题"
+  }
+}
+```
+
+### POST /api/ai/chat/{id}/message
+发送消息并获取 AI 回复
+
+**Request Body:**
+```json
+{ "content": "高数考试范围是什么？" }
+```
+
+**Response:**
+```json
+{
+  "code": 200,
+  "data": {
+    "userMessage": { "role": "user", "content": "高数考试范围是什么？" },
+    "assistantMessage": { "role": "assistant", "content": "...", "tokens": 256 }
+  }
+}
+```
+
+### GET /api/ai/chat/{id}/messages
+获取对话历史
+
+### GET /api/ai/chat/list
+获取当前用户对话列表
+
+### DELETE /api/ai/chat/{id}
+删除对话及所有消息
+
+---
+
+## 17. AI 知识库
+
+### GET /api/ai/knowledge/page
+分页查询知识库文档
+
+**Query Params:** `pageNo`, `pageSize`, `keyword`, `category`, `status`
+
+### GET /api/ai/knowledge/{id}
+获取文档详情
+
+### POST /api/ai/knowledge
+新增文档
+
+### PUT /api/ai/knowledge
+修改文档
+
+### DELETE /api/ai/knowledge/{id}
+删除文档
+
+### GET /api/ai/knowledge/search?keyword=xxx
+关键词搜索文档（用于 RAG 检索）
+
+---
+
+## 18. 学业画像
+
+### GET /api/ai/profile/page
+分页查询学生学业画像
+
+**Query Params:** `pageNo`, `pageSize`, `riskLevel`, `departmentId`, `keyword`
+
+### GET /api/ai/profile/student/{studentId}
+获取或自动计算指定学生画像
+
+### POST /api/ai/profile/calculate/{studentId}
+手动触发单个学生画像计算
+
+### POST /api/ai/profile/calculate-all
+全量计算所有在读学生画像
+
+### GET /api/ai/profile/statistics
+画像统计（各风险等级人数）
+
+---
+
+## 19. 学业预警
+
+### GET /api/ai/warning/page
+分页查询预警记录
+
+**Query Params:** `pageNo`, `pageSize`, `level`, `status`, `warningType`
+
+### POST /api/ai/warning/evaluate/{profileId}
+对指定画像执行预警评估
+
+### POST /api/ai/warning/evaluate-all
+对所有画像执行全量评估
+
+### PUT /api/ai/warning/{id}/resolve
+处理预警
+
+**Request Body:**
+```json
+{ "resolver": "李老师" }
+```
+
+### GET /api/ai/warning/statistics
+预警统计（各等级/各状态数量）
 
 ---
 

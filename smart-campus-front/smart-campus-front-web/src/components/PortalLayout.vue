@@ -17,6 +17,7 @@ const menuItems = [
   { name: '首页', path: '/home', icon: '🏠' },
   { name: '课程中心', path: '/courses', icon: '📚' },
   { name: '校园公告', path: '/announcements', icon: '📢' },
+  { name: 'AI 助教', path: '/ai-chat', icon: '🤖' },
   { name: '个人中心', path: '/profile', icon: '👤' },
 ]
 

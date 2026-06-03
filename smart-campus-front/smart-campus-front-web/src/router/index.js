@@ -15,6 +15,7 @@ const routes = [
       { path: 'home', name: '首页', component: () => import('@/views/Home.vue') },
       { path: 'courses', name: '课程中心', component: () => import('@/views/Courses.vue') },
       { path: 'announcements', name: '校园公告', component: () => import('@/views/Announcements.vue') },
+      { path: 'ai-chat', name: 'AI 助教', component: () => import('@/views/AiChat.vue') },
       { path: 'profile', name: '个人中心', component: () => import('@/views/Profile.vue') },
     ],
   },
