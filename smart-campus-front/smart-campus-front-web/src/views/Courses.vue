@@ -54,7 +54,7 @@ const pageSize = ref(8)
 async function fetchData() {
   loading.value = true
   try {
-    const res = await request.get('/courses', {
+    const res = await request.get('/courses/page', {
       params: { keyword: keyword.value, type: type.value, pageNo: pageNo.value, pageSize: pageSize.value },
     })
     list.value = res.data?.list || []

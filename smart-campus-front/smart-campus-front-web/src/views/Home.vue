@@ -64,8 +64,8 @@ async function fetchData() {
   try {
     const [overviewRes, announceRes, courseRes] = await Promise.all([
       request.get('/dashboard/overview'),
-      request.get('/announcements', { params: { pageSize: 5, status: '已发布' } }),
-      request.get('/courses', { params: { pageSize: 4 } }),
+      request.get('/announcements/page', { params: { pageSize: 5, status: '已发布' } }),
+      request.get('/courses/page', { params: { pageSize: 4 } }),
     ])
     const ov = overviewRes.data
     stats.value = [

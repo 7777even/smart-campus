@@ -50,7 +50,7 @@ function tagType(lv) {
 async function fetchData() {
   loading.value = true
   try {
-    const res = await request.get('/announcements', {
+    const res = await request.get('/announcements/page', {
       params: { level: level.value, status: '已发布', pageSize: 50 },
     })
     list.value = res.data?.list || []
