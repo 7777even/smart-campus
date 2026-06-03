@@ -1,7 +1,17 @@
 <script setup>
+import { computed } from 'vue'
 import { useRouter } from 'vue-router'
 
 const router = useRouter()
+
+const realName = computed(() => {
+  try {
+    const user = JSON.parse(localStorage.getItem('portal_user') || '{}')
+    return user.realName || '游客'
+  } catch {
+    return '游客'
+  }
+})
 
 const menuItems = [
   { name: '首页', path: '/home', icon: '🏠' },
@@ -42,7 +52,7 @@ function handleLogout() {
         <el-dropdown trigger="click">
           <span class="user-info">
             <el-avatar :size="32" icon="UserFilled" />
-            <span class="username">{{ JSON.parse(localStorage.getItem('portal_user') || '{}').realName || '游客' }}</span>
+            <span class="username">{{ realName }}</span>
           </span>
           <template #dropdown>
             <el-dropdown-menu>
