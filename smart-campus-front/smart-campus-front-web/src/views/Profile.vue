@@ -72,6 +72,7 @@
 <script setup>
 import { ref, computed, onMounted } from 'vue'
 import request from '@/api/request'
+import { getMyCourses } from '@/api/enrollment'
 
 const user = ref(JSON.parse(localStorage.getItem('portal_user') || '{}'))
 
@@ -93,31 +94,39 @@ function scoreClass(score) {
 
 async function fetchProfile() {
   try {
-    const res = await request.get(`/ai/profile/student/${user.value.id}`)
+    const studentId = user.value.studentId
+    if (!studentId) return
+    const res = await request.get(`/ai/profile/student/${studentId}`)
     profile.value = res.data
-  } catch (e) {
-    // 画像不存在或 API 不可用时忽略
-  }
+    if (profile.value) {
+      stats.value.avgScore = Math.round(profile.value.comprehensiveScore || 0)
+    }
+  } catch (e) { /* ignored */ }
 }
 
 async function fetchWarnings() {
   try {
+    const studentId = user.value.studentId
+    if (!studentId) return
     const res = await request.get('/ai/warning/page', {
       params: { pageSize: 5, status: 'pending' },
     })
     const list = res.data?.list || []
-    // 过滤当前用户相关的预警
-    warnings.value = list.filter(w => w.studentId === user.value.id)
-  } catch (e) {
-    // 忽略
-  }
+    warnings.value = list.filter(w => w.studentId === studentId)
+  } catch (e) { /* ignored */ }
+}
+
+async function fetchEnrollments() {
+  try {
+    const res = await getMyCourses()
+    const courses = res.data || []
+    stats.value.enrolledCourses = courses.length
+  } catch (e) { /* ignored */ }
 }
 
 onMounted(async () => {
-  stats.value = { enrolledCourses: 6, completedExams: 12, avgScore: 86 }
   if (user.value.role === 'student' || user.value.role === 'admin' || user.value.role === 'super_admin') {
-    await fetchProfile()
-    await fetchWarnings()
+    await Promise.all([fetchProfile(), fetchWarnings(), fetchEnrollments()])
   }
 })
 </script>

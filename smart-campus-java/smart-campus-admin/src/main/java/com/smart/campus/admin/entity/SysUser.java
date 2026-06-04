@@ -15,6 +15,7 @@ public class SysUser extends BaseEntity {
     private String avatar;
     private String phone;
     private Integer status = 1;    // 0禁用 1启用
+    private Long studentId;        // 关联学生ID（仅学生角色）
 
     public String getUsername() { return username; }
     public void setUsername(String username) { this.username = username; }
@@ -32,4 +33,6 @@ public class SysUser extends BaseEntity {
     public void setPhone(String phone) { this.phone = phone; }
     public Integer getStatus() { return status; }
     public void setStatus(Integer status) { this.status = status; }
+    public Long getStudentId() { return studentId; }
+    public void setStudentId(Long studentId) { this.studentId = studentId; }
 }

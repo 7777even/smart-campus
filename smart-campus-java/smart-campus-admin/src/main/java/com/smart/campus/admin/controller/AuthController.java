@@ -46,13 +46,14 @@ public class AuthController {
             throw new UnauthorizedException("账号已被禁用");
         }
 
-        String token = JwtUtil.generate(user.getId(), user.getUsername(), user.getRole());
+        String token = JwtUtil.generate(user.getId(), user.getUsername(), user.getRole(), user.getStudentId());
 
         Map<String, Object> userInfo = new LinkedHashMap<>();
         userInfo.put("id", user.getId());
         userInfo.put("username", user.getUsername());
         userInfo.put("realName", user.getRealName());
         userInfo.put("role", user.getRole());
+        userInfo.put("studentId", user.getStudentId());
 
         Map<String, Object> data = new LinkedHashMap<>();
         data.put("token", token);
@@ -80,6 +81,7 @@ public class AuthController {
         userInfo.put("avatar", user.getAvatar());
         userInfo.put("phone", user.getPhone());
         userInfo.put("status", user.getStatus());
+        userInfo.put("studentId", user.getStudentId());
 
         return R.ok(userInfo);
     }

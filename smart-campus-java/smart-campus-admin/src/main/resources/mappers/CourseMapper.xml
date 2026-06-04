@@ -107,4 +107,12 @@
         </foreach>
     </delete>
 
+    <select id="selectBatchByIds" resultMap="BaseResultMap">
+        SELECT <include refid="BaseColumns" /> FROM biz_course
+        WHERE id IN
+        <foreach collection="ids" item="id" open="(" separator="," close=")">
+            #{id}
+        </foreach>
+    </select>
+
 </mapper>

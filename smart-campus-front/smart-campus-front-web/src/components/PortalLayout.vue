@@ -65,7 +65,11 @@ function handleLogout() {
       </div>
     </header>
     <main class="portal-main">
-      <router-view />
+      <router-view v-slot="{ Component }">
+        <transition name="fade-slide" mode="out-in">
+          <component :is="Component" />
+        </transition>
+      </router-view>
     </main>
     <footer class="portal-footer">
       <p>© 2026 智慧校园数字基座 · Smart Campus Platform</p>

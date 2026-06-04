@@ -41,6 +41,10 @@ public class AuthInterceptor implements HandlerInterceptor {
         // 将用户信息存入请求属性
         request.setAttribute("userId", JwtUtil.getUserId(token));
         request.setAttribute("userRole", JwtUtil.getRole(token));
+        Long studentId = JwtUtil.getStudentId(token);
+        if (studentId != null) {
+            request.setAttribute("studentId", studentId);
+        }
         return true;
     }
 }

@@ -12,12 +12,13 @@
         <result column="avatar" property="avatar" />
         <result column="phone" property="phone" />
         <result column="status" property="status" />
+        <result column="student_id" property="studentId" />
         <result column="create_time" property="createTime" />
         <result column="update_time" property="updateTime" />
     </resultMap>
 
     <sql id="Base_Column_List">
-        id, username, password, real_name, role, email, avatar, phone, status, create_time, update_time
+        id, username, password, real_name, role, email, avatar, phone, status, student_id, create_time, update_time
     </sql>
 
     <sql id="Where_Clause">

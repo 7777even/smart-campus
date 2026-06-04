@@ -23,14 +23,24 @@ public class JwtUtil {
      * 生成 JWT Token
      */
     public static String generate(Long userId, String username, String role) {
-        return Jwts.builder()
+        return generate(userId, username, role, null);
+    }
+
+    /**
+     * 生成 JWT Token（含学生ID）
+     */
+    public static String generate(Long userId, String username, String role, Long studentId) {
+        var builder = Jwts.builder()
                 .subject(String.valueOf(userId))
                 .claim("username", username)
                 .claim("role", role)
                 .issuedAt(new Date())
                 .expiration(new Date(System.currentTimeMillis() + EXPIRATION))
-                .signWith(KEY)
-                .compact();
+                .signWith(KEY);
+        if (studentId != null) {
+            builder.claim("studentId", studentId);
+        }
+        return builder.compact();
     }
 
     /**
@@ -68,5 +78,16 @@ public class JwtUtil {
      */
     public static String getRole(String token) {
         return parse(token).get("role", String.class);
+    }
+
+    /**
+     * 从 Token 中提取学生ID
+     */
+    public static Long getStudentId(String token) {
+        try {
+            return parse(token).get("studentId", Long.class);
+        } catch (Exception e) {
+            return null;
+        }
     }
 }

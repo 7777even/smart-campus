@@ -20,4 +20,6 @@ public interface CourseMapper extends BaseMapper<Course> {
                      @Param("departmentId") Long departmentId,
                      @Param("type") String type,
                      @Param("credit") Integer credit);
+
+    List<Course> selectBatchByIds(@Param("ids") List<Long> ids);
 }
