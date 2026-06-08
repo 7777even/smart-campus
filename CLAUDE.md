@@ -80,3 +80,38 @@
 - 后端通用：`smart-campus-java/CLAUDE.md`
 - 前端通用：`smart-campus-front/CLAUDE.md`
 - 各子模块 / 前端工程根目录下的 `AGENTS.md` 为补充约束。
+
+# 测试规范
+
+## 测试框架
+- JUnit 5 + Mockito 5，使用 `@ExtendWith(MockitoExtension.class)`
+- 测试类名 = `被测试类名 + Test`，放 `src/test/java/` 对应包路径
+- 每个方法使用 `@DisplayName("中文描述")` 标注测试场景
+
+## 覆盖要求
+- **P0**：工具类 + 核心业务 Service 必须覆盖（AI对话、推荐引擎、学业画像、学业预警）
+- **P1**：通用 CRUD Service 需有基类测试
+- **P2**：Controller 集成测试（视情况补充）
+
+## 每方法至少覆盖
+1. 正常路径（happy path）
+2. 异常路径（空数据、非法输入）
+3. 边界值（极值、临界值）
+
+## Mock 原则
+- 只 Mock 外部依赖（Mapper、JdbcTemplate），不 Mock 被测试对象
+- 使用 `@Captor` 验证传递给 Mapper 的关键参数
+- 禁止 `MockitoJUnitRunner`，统一用 `@ExtendWith`
+
+## 运行测试
+```bash
+mvn test                    # 全部
+mvn test -pl smart-campus-admin -am    # 单模块
+mvn verify                  # 含 JaCoCo 覆盖率报告
+```
+
+# 代码审查规范
+
+- 提交前通过 `pre-commit-review` workflow 自动扫描
+- 审查维度：正确性（N+1/事务/NPE）→ 安全（SQL注入/权限/越权）→ 架构规范（分层/包路径）→ 字段一致性 → 代码质量
+- P0（必须修）、P1（建议修）、P2（值得关注）三级问题分级

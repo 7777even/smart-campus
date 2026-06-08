@@ -96,3 +96,37 @@ Controller → Biz → Service → Mapper → 数据库
 # 子模块约束
 
 详见各模块下的 `AGENTS.md`，与本文件冲突时以 `AGENTS.md` 中更细化的约束为准。
+
+# 测试规范
+
+## 测试目录
+```
+smart-campus-common/src/test/java/com/campus/
+    utils/         工具类（JwtUtil 等）
+    result/        响应体
+    exception/     异常处理器
+    service/       公共 Service 基类
+
+smart-campus-admin/src/test/java/com/smart/campus/admin/
+    service/       业务 Service（AI / 推荐 / CRUD）
+    controller/   Controller 集成测试
+
+smart-campus-web/src/test/java/com/smart/web/
+    service/       用户端服务
+    controller/    用户端 Controller
+```
+
+## 新增模块时的测试要求
+1. 新增 Service 类后，同步创建对应的 `XxxServiceTest.java`
+2. 覆盖：正常 CRUD 路径 + 异常参数 + 边界值
+3. 管理端 Controller 新增接口时，验证权限注解是否齐全
+
+## Mock 规范
+- Mapper 层全部 Mock，不启动 Spring 容器（单元测试）
+- 涉及外部 API（LLM 调用等）用 Mock 回复或 Mock HTTP 客户端
+- JdbcTemplate 查询结果用 `when().thenReturn()` 构造返回
+
+## 命名约定
+- 测试类：`XxxServiceTest`、`XxxUtilTest`、`XxxControllerTest`
+- 方法名：`methodNameScenario`（驼峰）
+- DisplayName：中文描述，如 `"发送消息并获取 Mock 回复"`

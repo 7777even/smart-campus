@@ -4,7 +4,9 @@
         ".claude/skills/vue-admin-page.md",
         ".claude/skills/vue-web-page.md",
         ".claude/skills/smart-campus-java.md",
-        ".claude/skills/smart-campus-front.md"
+        ".claude/skills/smart-campus-front.md",
+        ".claude/skills/java-test.md",
+        ".claude/skills/code-review-local.md"
     ],
     "projectContextFile": "CLAUDE.md",
     "autoLoadSkills": true
