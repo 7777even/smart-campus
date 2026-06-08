@@ -1,13 +1,17 @@
 {
     "customSkills": [
-        ".claude/skills/java-module.md",
-        ".claude/skills/vue-admin-page.md",
-        ".claude/skills/vue-web-page.md",
-        ".claude/skills/smart-campus-java.md",
-        ".claude/skills/smart-campus-front.md",
-        ".claude/skills/java-test.md",
-        ".claude/skills/code-review-local.md"
+        ".claude/skills/java-module",
+        ".claude/skills/vue-admin-page",
+        ".claude/skills/vue-web-page",
+        ".claude/skills/smart-campus-java",
+        ".claude/skills/smart-campus-front",
+        ".claude/skills/java-test",
+        ".claude/skills/code-review-local"
     ],
+    "hooks": {
+        "PreCommit": ".claude/hooks/pre-commit.sh",
+        "PostStart": ".claude/hooks/post-start.sh"
+    },
     "projectContextFile": "CLAUDE.md",
     "autoLoadSkills": true
 }

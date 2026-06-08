@@ -115,3 +115,27 @@ mvn verify                  # 含 JaCoCo 覆盖率报告
 - 提交前通过 `pre-commit-review` workflow 自动扫描
 - 审查维度：正确性（N+1/事务/NPE）→ 安全（SQL注入/权限/越权）→ 架构规范（分层/包路径）→ 字段一致性 → 代码质量
 - P0（必须修）、P1（建议修）、P2（值得关注）三级问题分级
+
+# 自动化流水线
+
+项目配置了 Claude Code 自动化流水线，定义在 `.claude/` 目录下：
+
+## Hooks（自动触发）
+
+| Hook | 触发时机 | 脚本 | 说明 |
+|---|---|---|---|
+| `PreCommit` | `git commit` 前 | `.claude/hooks/pre-commit.sh` | 快速检查暂存区变更：权限注解缺失、SQL 高危操作、Vue 直接 import axios |
+| `PostStart` | 每次启动 Claude Code | `.claude/hooks/post-start.sh` | 环境检查：JDK / MySQL / Redis / Node 可达性、模块结构完整性 |
+
+## Workflows（手动调用）
+
+| Workflow | 命令 | 说明 |
+|---|---|---|
+| `pre-commit-review` | `/pre-commit-review` | 提交前全方位代码审查：Java/Vue/XML/SQL 多维扫描，检查 N+1、SQL 注入、空 catch、TODO 残留等 |
+| `pr-checklist` | 调用 PR 检查流程 | PR 就绪验证：Maven 编译检查 + 单元测试 + 合规扫描 |
+
+## 使用建议
+
+- 提交前先运行 `/pre-commit-review` workflow 做全面审查（hook 只做快速基础检查）
+- 提 PR 前运行 PR 检查流程，确保编译 + 测试 + 合规全部通过
+- 首次启动后查看环境检查报告，确认开发环境正常
