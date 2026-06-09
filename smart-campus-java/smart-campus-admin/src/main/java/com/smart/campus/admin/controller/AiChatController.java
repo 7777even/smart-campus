@@ -2,8 +2,8 @@ package com.smart.campus.admin.controller;
 
 import com.campus.entity.PageResult;
 import com.campus.result.R;
-import com.smart.campus.admin.entity.AiConversation;
-import com.smart.campus.admin.entity.AiMessage;
+import com.campus.entity.AiConversation;
+import com.campus.entity.AiMessage;
 import com.smart.campus.admin.service.AiChatService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;

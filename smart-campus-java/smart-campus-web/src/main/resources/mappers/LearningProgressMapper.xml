@@ -1,0 +1,68 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.smart.campus.web.mappers.LearningProgressMapper">
+
+    <resultMap id="BaseResultMap" type="com.smart.campus.web.entity.LearningProgress">
+        <id column="id" property="id" />
+        <result column="create_time" property="createTime" />
+        <result column="update_time" property="updateTime" />
+        <result column="student_id" property="studentId" />
+        <result column="course_id" property="courseId" />
+        <result column="completion_rate" property="completionRate" />
+        <result column="total_lessons" property="totalLessons" />
+        <result column="completed_lessons" property="completedLessons" />
+    </resultMap>
+
+    <sql id="BaseColumns">
+        id, create_time, update_time, student_id, course_id,
+        completion_rate, total_lessons, completed_lessons
+    </sql>
+
+    <select id="selectById" resultMap="BaseResultMap">
+        SELECT <include refid="BaseColumns" /> FROM biz_learning_progress WHERE id = #{id}
+    </select>
+
+    <select id="selectList" resultMap="BaseResultMap">
+        SELECT <include refid="BaseColumns" /> FROM biz_learning_progress
+        ORDER BY create_time DESC
+    </select>
+
+    <select id="selectCount" resultType="long">
+        SELECT COUNT(*) FROM biz_learning_progress
+    </select>
+
+    <select id="selectByStudentAndCourse" resultMap="BaseResultMap">
+        SELECT <include refid="BaseColumns" /> FROM biz_learning_progress
+        WHERE student_id = #{studentId} AND course_id = #{courseId}
+    </select>
+
+    <insert id="insert" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO biz_learning_progress (student_id, course_id, completion_rate,
+                                           total_lessons, completed_lessons, create_time, update_time)
+        VALUES (#{studentId}, #{courseId}, #{completionRate},
+                #{totalLessons}, #{completedLessons}, NOW(), NOW())
+    </insert>
+
+    <update id="update">
+        UPDATE biz_learning_progress
+        <set>
+            <if test="studentId != null">student_id = #{studentId},</if>
+            <if test="courseId != null">course_id = #{courseId},</if>
+            <if test="completionRate != null">completion_rate = #{completionRate},</if>
+            <if test="totalLessons != null">total_lessons = #{totalLessons},</if>
+            <if test="completedLessons != null">completed_lessons = #{completedLessons},</if>
+            update_time = NOW()
+        </set>
+        WHERE student_id = #{studentId} AND course_id = #{courseId}
+    </update>
+
+    <delete id="deleteById">
+        DELETE FROM biz_learning_progress WHERE id = #{id}
+    </delete>
+
+    <delete id="deleteByStudentAndCourse">
+        DELETE FROM biz_learning_progress
+        WHERE student_id = #{studentId} AND course_id = #{courseId}
+    </delete>
+
+</mapper>

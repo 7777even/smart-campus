@@ -1,23 +1,21 @@
 <script setup>
 import { computed } from 'vue'
 import { useRouter } from 'vue-router'
+import { useUserStore } from '@/stores/user'
 
 const router = useRouter()
+const userStore = useUserStore()
 
-const realName = computed(() => {
-  try {
-    const user = JSON.parse(localStorage.getItem('portal_user') || '{}')
-    return user.realName || '游客'
-  } catch {
-    return '游客'
-  }
-})
+const realName = computed(() => userStore.realName)
 
 const menuItems = [
   { name: '首页', path: '/home', icon: '🏠' },
   { name: '课程中心', path: '/courses', icon: '📚' },
   { name: '校园公告', path: '/announcements', icon: '📢' },
+  { name: '我的考试', path: '/exams', icon: '📝' },
+  { name: '课表', path: '/schedule', icon: '📅' },
   { name: 'AI 助教', path: '/ai-chat', icon: '🤖' },
+  { name: '学习分析', path: '/analytics', icon: '📊' },
   { name: '个人中心', path: '/profile', icon: '👤' },
 ]
 
@@ -26,8 +24,7 @@ function goTo(path) {
 }
 
 function handleLogout() {
-  localStorage.removeItem('portal_token')
-  localStorage.removeItem('portal_user')
+  userStore.clearLoginData()
   router.push('/login')
 }
 </script>

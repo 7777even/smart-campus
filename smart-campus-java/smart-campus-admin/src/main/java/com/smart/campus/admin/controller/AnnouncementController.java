@@ -1,7 +1,7 @@
 package com.smart.campus.admin.controller;
 
 import com.campus.result.R;
-import com.smart.campus.admin.entity.Announcement;
+import com.campus.entity.Announcement;
 import com.smart.campus.admin.service.AnnouncementService;
 import org.springframework.web.bind.annotation.*;
 

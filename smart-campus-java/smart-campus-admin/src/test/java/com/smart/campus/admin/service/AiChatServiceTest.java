@@ -1,8 +1,8 @@
 package com.smart.campus.admin.service;
 
-import com.smart.campus.admin.entity.AiConversation;
-import com.smart.campus.admin.entity.AiKnowledgeDoc;
-import com.smart.campus.admin.entity.AiMessage;
+import com.campus.entity.AiConversation;
+import com.campus.entity.AiKnowledgeDoc;
+import com.campus.entity.AiMessage;
 import com.smart.campus.admin.mappers.AiConversationMapper;
 import com.smart.campus.admin.mappers.AiKnowledgeDocMapper;
 import com.smart.campus.admin.mappers.AiMessageMapper;

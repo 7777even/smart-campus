@@ -2,7 +2,7 @@ package com.smart.campus.admin.controller;
 
 import com.campus.exception.UnauthorizedException;
 import com.campus.result.R;
-import com.smart.campus.admin.entity.Course;
+import com.campus.entity.Course;
 import com.smart.campus.admin.service.impl.StudentCourseServiceImpl;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;

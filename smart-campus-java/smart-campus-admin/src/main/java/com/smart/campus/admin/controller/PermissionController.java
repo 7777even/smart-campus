@@ -1,9 +1,9 @@
 package com.smart.campus.admin.controller;
 
 import com.campus.result.R;
-import com.smart.campus.admin.entity.SysPermission;
-import com.smart.campus.admin.entity.SysRole;
-import com.smart.campus.admin.entity.SysUser;
+import com.campus.entity.SysPermission;
+import com.campus.entity.SysRole;
+import com.campus.entity.SysUser;
 import com.smart.campus.admin.service.SysPermissionService;
 import com.smart.campus.admin.service.SysRoleService;
 import com.smart.campus.admin.service.SysUserService;

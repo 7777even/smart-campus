@@ -2,8 +2,8 @@ package com.smart.campus.admin.service.impl;
 
 import com.campus.mappers.BaseMapper;
 import com.campus.service.BaseService;
-import com.smart.campus.admin.entity.Teacher;
-import com.smart.campus.admin.mappers.TeacherMapper;
+import com.campus.entity.Teacher;
+import com.campus.mappers.TeacherMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 

@@ -2,8 +2,8 @@ package com.smart.campus.admin.service.impl;
 
 import com.campus.mappers.BaseMapper;
 import com.campus.service.BaseService;
-import com.smart.campus.admin.entity.Exam;
-import com.smart.campus.admin.mappers.ExamMapper;
+import com.campus.entity.Exam;
+import com.campus.mappers.ExamMapper;
 import org.springframework.stereotype.Service;
 
 /**

@@ -2,8 +2,8 @@ package com.smart.campus.admin.service;
 
 import com.campus.mappers.BaseMapper;
 import com.campus.service.BaseService;
-import com.smart.campus.admin.entity.Announcement;
-import com.smart.campus.admin.mappers.AnnouncementMapper;
+import com.campus.entity.Announcement;
+import com.campus.mappers.AnnouncementMapper;
 import org.springframework.stereotype.Service;
 
 @Service

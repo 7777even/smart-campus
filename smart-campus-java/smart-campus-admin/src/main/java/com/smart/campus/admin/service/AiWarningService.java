@@ -1,9 +1,9 @@
 package com.smart.campus.admin.service;
 
-import com.smart.campus.admin.entity.AiEarlyWarning;
-import com.smart.campus.admin.entity.AiStudentProfile;
-import com.smart.campus.admin.mappers.AiEarlyWarningMapper;
-import com.smart.campus.admin.mappers.AiStudentProfileMapper;
+import com.campus.entity.AiEarlyWarning;
+import com.campus.entity.AiStudentProfile;
+import com.campus.mappers.AiEarlyWarningMapper;
+import com.campus.mappers.AiStudentProfileMapper;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;

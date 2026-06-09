@@ -1,7 +1,7 @@
 package com.smart.campus.admin.service;
 
-import com.smart.campus.admin.mappers.CourseMapper;
-import com.smart.campus.admin.mappers.StudentCourseMapper;
+import com.campus.mappers.CourseMapper;
+import com.campus.mappers.StudentCourseMapper;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Service;
 

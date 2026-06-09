@@ -1,0 +1,98 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.smart.campus.web.mappers.LessonMapper">
+
+    <resultMap id="BaseResultMap" type="com.smart.campus.web.entity.Lesson">
+        <id column="id" property="id" />
+        <result column="create_time" property="createTime" />
+        <result column="update_time" property="updateTime" />
+        <result column="chapter_id" property="chapterId" />
+        <result column="name" property="name" />
+        <result column="course_id" property="courseId" />
+        <result column="resource_type" property="resourceType" />
+        <result column="resource_url" property="resourceUrl" />
+        <result column="duration" property="duration" />
+        <result column="description" property="description" />
+        <result column="sort" property="sort" />
+        <result column="status" property="status" />
+    </resultMap>
+
+    <sql id="BaseColumns">
+        id, create_time, update_time, chapter_id, name, course_id, resource_type,
+        resource_url, duration, description, sort, status
+    </sql>
+
+    <select id="selectById" resultMap="BaseResultMap">
+        SELECT <include refid="BaseColumns" /> FROM biz_lesson WHERE id = #{id}
+    </select>
+
+    <select id="selectList" resultMap="BaseResultMap">
+        SELECT <include refid="BaseColumns" /> FROM biz_lesson
+        <where>
+            <if test="chapterId != null">
+                AND chapter_id = #{chapterId}
+            </if>
+            <if test="courseId != null and courseId != ''">
+                AND course_id = #{courseId}
+            </if>
+        </where>
+        ORDER BY sort ASC, id ASC
+    </select>
+
+    <select id="selectCount" resultType="long">
+        SELECT COUNT(*) FROM biz_lesson
+        <where>
+            <if test="chapterId != null">
+                AND chapter_id = #{chapterId}
+            </if>
+            <if test="courseId != null and courseId != ''">
+                AND course_id = #{courseId}
+            </if>
+        </where>
+    </select>
+
+    <select id="selectByChapterId" resultMap="BaseResultMap">
+        SELECT <include refid="BaseColumns" /> FROM biz_lesson
+        WHERE chapter_id = #{chapterId}
+        ORDER BY sort ASC, id ASC
+    </select>
+
+    <select id="selectByCourseId" resultMap="BaseResultMap">
+        SELECT <include refid="BaseColumns" /> FROM biz_lesson
+        WHERE course_id = #{courseId}
+        ORDER BY sort ASC, id ASC
+    </select>
+
+    <insert id="insert" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO biz_lesson (chapter_id, name, course_id, resource_type, resource_url,
+                                duration, description, sort, status, create_time, update_time)
+        VALUES (#{chapterId}, #{name}, #{courseId}, #{resourceType}, #{resourceUrl},
+                #{duration}, #{description}, #{sort}, #{status}, NOW(), NOW())
+    </insert>
+
+    <update id="update">
+        UPDATE biz_lesson
+        <set>
+            <if test="chapterId != null">chapter_id = #{chapterId},</if>
+            <if test="name != null">name = #{name},</if>
+            <if test="courseId != null">course_id = #{courseId},</if>
+            <if test="resourceType != null">resource_type = #{resourceType},</if>
+            <if test="resourceUrl != null">resource_url = #{resourceUrl},</if>
+            <if test="duration != null">duration = #{duration},</if>
+            <if test="description != null">description = #{description},</if>
+            <if test="sort != null">sort = #{sort},</if>
+            <if test="status != null">status = #{status},</if>
+            update_time = NOW()
+        </set>
+        WHERE id = #{id}
+    </update>
+
+    <delete id="deleteById">
+        DELETE FROM biz_lesson WHERE id = #{id}
+    </delete>
+
+    <delete id="deleteByChapterId">
+        DELETE FROM biz_lesson WHERE chapter_id = #{chapterId}
+    </delete>
+
+</mapper>

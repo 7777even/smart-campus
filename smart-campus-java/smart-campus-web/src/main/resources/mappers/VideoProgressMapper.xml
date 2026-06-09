@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.smart.campus.web.mappers.VideoProgressMapper">
+
+    <resultMap id="BaseResultMap" type="com.smart.campus.web.entity.VideoProgress">
+        <id column="id" property="id" />
+        <result column="create_time" property="createTime" />
+        <result column="update_time" property="updateTime" />
+        <result column="lesson_id" property="lessonId" />
+        <result column="student_id" property="studentId" />
+        <result column="progress_point" property="progressPoint" />
+        <result column="duration" property="duration" />
+    </resultMap>
+
+    <sql id="BaseColumns">
+        id, create_time, update_time, lesson_id, student_id, progress_point, duration
+    </sql>
+
+    <select id="selectById" resultMap="BaseResultMap">
+        SELECT <include refid="BaseColumns" /> FROM biz_video_progress WHERE id = #{id}
+    </select>
+
+    <select id="selectList" resultMap="BaseResultMap">
+        SELECT <include refid="BaseColumns" /> FROM biz_video_progress
+        ORDER BY create_time DESC
+    </select>
+
+    <select id="selectCount" resultType="long">
+        SELECT COUNT(*) FROM biz_video_progress
+    </select>
+
+    <select id="selectByLessonAndStudent" resultMap="BaseResultMap">
+        SELECT <include refid="BaseColumns" /> FROM biz_video_progress
+        WHERE lesson_id = #{lessonId} AND student_id = #{studentId}
+    </select>
+
+    <insert id="insert" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO biz_video_progress (lesson_id, student_id, progress_point,
+                                        duration, create_time, update_time)
+        VALUES (#{lessonId}, #{studentId}, #{progressPoint},
+                #{duration}, NOW(), NOW())
+    </insert>
+
+    <update id="update">
+        UPDATE biz_video_progress
+        <set>
+            <if test="lessonId != null">lesson_id = #{lessonId},</if>
+            <if test="studentId != null">student_id = #{studentId},</if>
+            <if test="progressPoint != null">progress_point = #{progressPoint},</if>
+            <if test="duration != null">duration = #{duration},</if>
+            update_time = NOW()
+        </set>
+        WHERE lesson_id = #{lessonId} AND student_id = #{studentId}
+    </update>
+
+    <delete id="deleteById">
+        DELETE FROM biz_video_progress WHERE id = #{id}
+    </delete>
+
+    <delete id="deleteByLessonAndStudent">
+        DELETE FROM biz_video_progress
+        WHERE lesson_id = #{lessonId} AND student_id = #{studentId}
+    </delete>
+
+</mapper>

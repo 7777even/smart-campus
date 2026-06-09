@@ -19,7 +19,7 @@ server: {
   hotUpdate: true,
   proxy: {
     '/api': {
-      target: 'http://localhost:6061',
+      target: 'http://localhost:6060',
       changeOrigin: true,
     }
   }

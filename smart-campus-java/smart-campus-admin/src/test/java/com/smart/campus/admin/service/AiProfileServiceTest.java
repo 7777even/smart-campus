@@ -1,8 +1,8 @@
 package com.smart.campus.admin.service;
 
 import com.campus.entity.PageResult;
-import com.smart.campus.admin.entity.AiStudentProfile;
-import com.smart.campus.admin.entity.Student;
+import com.campus.entity.AiStudentProfile;
+import com.campus.entity.Student;
 import com.smart.campus.admin.mappers.AiEarlyWarningMapper;
 import com.smart.campus.admin.mappers.AiStudentProfileMapper;
 import com.smart.campus.admin.mappers.StudentMapper;

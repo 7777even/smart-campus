@@ -1,0 +1,118 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.campus.mappers.CourseMapper">
+
+    <resultMap id="BaseResultMap" type="com.campus.entity.Course">
+        <id column="id" property="id" />
+        <result column="create_time" property="createTime" />
+        <result column="update_time" property="updateTime" />
+        <result column="name" property="name" />
+        <result column="code" property="code" />
+        <result column="department_id" property="departmentId" />
+        <result column="teacher_id" property="teacherId" />
+        <result column="teacher_name" property="teacherName" />
+        <result column="type" property="type" />
+        <result column="credit" property="credit" />
+        <result column="hours" property="hours" />
+        <result column="location" property="location" />
+        <result column="status" property="status" />
+        <result column="description" property="description" />
+        <result column="cover" property="cover" />
+    </resultMap>
+
+    <sql id="BaseColumns">
+        id, create_time, update_time, name, code, department_id, teacher_id, teacher_name,
+        type, credit, hours, location, status, description, cover
+    </sql>
+
+    <select id="selectById" resultMap="BaseResultMap">
+        SELECT <include refid="BaseColumns" /> FROM biz_course WHERE id = #{id}
+    </select>
+
+    <select id="selectList" resultMap="BaseResultMap">
+        SELECT <include refid="BaseColumns" /> FROM biz_course
+        WHERE 1=1
+        <if test="keyword != null and keyword != ''">
+            AND (name LIKE CONCAT('%', #{keyword}, '%') OR code LIKE CONCAT('%', #{keyword}, '%'))
+        </if>
+        <if test="departmentId != null">
+            AND department_id = #{departmentId}
+        </if>
+        <if test="type != null and type != ''">
+            AND type = #{type}
+        </if>
+        <if test="credit != null">
+            AND credit = #{credit}
+        </if>
+        ORDER BY create_time DESC
+        <if test="pageNo != null and pageSize != null">
+            LIMIT #{pageNo}, #{pageSize}
+        </if>
+    </select>
+
+    <select id="selectCount" resultType="long">
+        SELECT COUNT(*) FROM biz_course
+        WHERE 1=1
+        <if test="keyword != null and keyword != ''">
+            AND (name LIKE CONCAT('%', #{keyword}, '%') OR code LIKE CONCAT('%', #{keyword}, '%'))
+        </if>
+        <if test="departmentId != null">
+            AND department_id = #{departmentId}
+        </if>
+        <if test="type != null and type != ''">
+            AND type = #{type}
+        </if>
+        <if test="credit != null">
+            AND credit = #{credit}
+        </if>
+    </select>
+
+    <insert id="insert" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO biz_course (name, code, department_id, teacher_id, teacher_name,
+                                type, credit, hours, location, status, description, cover,
+                                create_time, update_time)
+        VALUES (#{name}, #{code}, #{departmentId}, #{teacherId}, #{teacherName},
+                #{type}, #{credit}, #{hours}, #{location}, #{status}, #{description}, #{cover},
+                NOW(), NOW())
+    </insert>
+
+    <update id="update">
+        UPDATE biz_course
+        <set>
+            <if test="name != null">name = #{name},</if>
+            <if test="code != null">code = #{code},</if>
+            <if test="departmentId != null">department_id = #{departmentId},</if>
+            <if test="teacherId != null">teacher_id = #{teacherId},</if>
+            <if test="teacherName != null">teacher_name = #{teacherName},</if>
+            <if test="type != null">type = #{type},</if>
+            <if test="credit != null">credit = #{credit},</if>
+            <if test="hours != null">hours = #{hours},</if>
+            <if test="location != null">location = #{location},</if>
+            <if test="status != null">status = #{status},</if>
+            <if test="description != null">description = #{description},</if>
+            <if test="cover != null">cover = #{cover},</if>
+            update_time = NOW()
+        </set>
+        WHERE id = #{id}
+    </update>
+
+    <delete id="deleteById">
+        DELETE FROM biz_course WHERE id = #{id}
+    </delete>
+
+    <delete id="deleteByIds">
+        DELETE FROM biz_course WHERE id IN
+        <foreach collection="ids" item="id" open="(" separator="," close=")">
+            #{id}
+        </foreach>
+    </delete>
+
+    <select id="selectBatchByIds" resultMap="BaseResultMap">
+        SELECT <include refid="BaseColumns" /> FROM biz_course
+        WHERE id IN
+        <foreach collection="ids" item="id" open="(" separator="," close=")">
+            #{id}
+        </foreach>
+    </select>
+
+</mapper>

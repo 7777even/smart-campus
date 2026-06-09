@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.smart.campus.web.mappers.WebAiConversationMapper">
+
+    <resultMap id="BaseResultMap" type="com.campus.entity.AiConversation">
+        <id column="id" property="id" jdbcType="BIGINT"/>
+        <result column="user_id" property="userId" jdbcType="BIGINT"/>
+        <result column="user_role" property="userRole" jdbcType="VARCHAR"/>
+        <result column="title" property="title" jdbcType="VARCHAR"/>
+        <result column="create_time" property="createTime" jdbcType="TIMESTAMP"/>
+        <result column="update_time" property="updateTime" jdbcType="TIMESTAMP"/>
+    </resultMap>
+
+    <sql id="BaseColumns">
+        id, user_id, user_role, title, create_time, update_time
+    </sql>
+
+    <select id="selectById" resultMap="BaseResultMap">
+        SELECT <include refid="BaseColumns"/> FROM ai_conversation WHERE id = #{id}
+    </select>
+
+    <select id="selectList" resultMap="BaseResultMap">
+        SELECT <include refid="BaseColumns"/> FROM ai_conversation
+        ORDER BY update_time DESC
+        LIMIT #{pageSize} OFFSET #{pageNo}
+    </select>
+
+    <select id="selectCount" resultType="long">
+        SELECT COUNT(*) FROM ai_conversation
+    </select>
+
+    <select id="selectByUserIdAndUserRole" resultMap="BaseResultMap">
+        SELECT <include refid="BaseColumns"/> FROM ai_conversation
+        WHERE user_id = #{userId} AND user_role = #{userRole}
+        ORDER BY update_time DESC
+        LIMIT 1
+    </select>
+
+    <select id="selectByUserId" resultMap="BaseResultMap">
+        SELECT <include refid="BaseColumns"/> FROM ai_conversation
+        WHERE user_id = #{userId}
+        ORDER BY update_time DESC
+    </select>
+
+    <insert id="insert" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO ai_conversation (user_id, user_role, title, create_time, update_time)
+        VALUES (#{userId}, #{userRole}, #{title}, NOW(), NOW())
+    </insert>
+
+    <update id="update">
+        UPDATE ai_conversation
+        <set>
+            <if test="title != null">title = #{title},</if>
+            update_time = NOW()
+        </set>
+        WHERE id = #{id}
+    </update>
+
+    <delete id="deleteById">
+        DELETE FROM ai_conversation WHERE id = #{id}
+    </delete>
+
+</mapper>

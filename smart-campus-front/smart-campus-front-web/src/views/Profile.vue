@@ -97,7 +97,7 @@ async function fetchProfile() {
     const studentId = user.value.studentId
     if (!studentId) return
     const res = await request.get(`/ai/profile/student/${studentId}`)
-    profile.value = res.data
+    profile.value = res?.data
     if (profile.value) {
       stats.value.avgScore = Math.round(profile.value.comprehensiveScore || 0)
     }
@@ -108,18 +108,15 @@ async function fetchWarnings() {
   try {
     const studentId = user.value.studentId
     if (!studentId) return
-    const res = await request.get('/ai/warning/page', {
-      params: { pageSize: 5, status: 'pending' },
-    })
-    const list = res.data?.list || []
-    warnings.value = list.filter(w => w.studentId === studentId)
+    const res = await request.get(`/ai/profile/warning/student/${studentId}`)
+    warnings.value = res?.data || []
   } catch (e) { /* ignored */ }
 }
 
 async function fetchEnrollments() {
   try {
     const res = await getMyCourses()
-    const courses = res.data || []
+    const courses = res?.data || []
     stats.value.enrolledCourses = courses.length
   } catch (e) { /* ignored */ }
 }

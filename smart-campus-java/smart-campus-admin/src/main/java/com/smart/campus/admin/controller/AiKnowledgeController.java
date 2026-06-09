@@ -2,7 +2,7 @@ package com.smart.campus.admin.controller;
 
 import com.campus.entity.PageResult;
 import com.campus.result.R;
-import com.smart.campus.admin.entity.AiKnowledgeDoc;
+import com.campus.entity.AiKnowledgeDoc;
 import com.smart.campus.admin.service.AiKnowledgeService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;

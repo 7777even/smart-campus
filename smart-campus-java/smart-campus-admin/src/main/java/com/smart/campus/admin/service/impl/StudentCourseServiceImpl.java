@@ -3,10 +3,10 @@ package com.smart.campus.admin.service.impl;
 import com.campus.exception.BusinessException;
 import com.campus.mappers.BaseMapper;
 import com.campus.service.BaseService;
-import com.smart.campus.admin.entity.Course;
-import com.smart.campus.admin.entity.StudentCourse;
-import com.smart.campus.admin.mappers.CourseMapper;
-import com.smart.campus.admin.mappers.StudentCourseMapper;
+import com.campus.entity.Course;
+import com.campus.entity.StudentCourse;
+import com.campus.mappers.CourseMapper;
+import com.campus.mappers.StudentCourseMapper;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 

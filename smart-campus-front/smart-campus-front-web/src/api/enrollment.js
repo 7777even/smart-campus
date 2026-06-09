@@ -9,11 +9,11 @@ export function dropCourse(courseId) {
 }
 
 export function getMyCourses() {
-  return request.get('/student-courses/my')
+  return request.get('/courses/my')
 }
 
 export function checkEnrolled(courseId) {
-  return request.get(`/student-courses/check/${courseId}`)
+  return request.get(`/courses/enrolled/${courseId}/check`)
 }
 
 export function getEnrollCount() {

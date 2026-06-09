@@ -92,9 +92,10 @@ import { ref, computed, onMounted } from 'vue'
 import { ElMessage } from 'element-plus'
 import request from '@/api/request'
 import { getRecommendCourses, getHotCourses, getRecommendResources } from '@/api/recommend'
+import { useUserStore } from '@/stores/user'
 
-const user = JSON.parse(localStorage.getItem('portal_user') || '{}')
-const userName = computed(() => user.realName || '同学')
+const userStore = useUserStore()
+const userName = computed(() => userStore.realName)
 
 const stats = ref([])
 const announcements = ref([])
@@ -109,20 +110,21 @@ function typeIcon(type) {
 
 async function fetchData() {
   try {
-    const [overviewRes, announceRes, hotCourseRes] = await Promise.all([
-      request.get('/dashboard/overview'),
-      request.get('/announcements/page', { params: { pageSize: 5, status: '已发布' } }),
+    const [myCourseRes, announceRes, hotCourseRes] = await Promise.allSettled([
+      request.get('/courses/my'),
+      request.get('/announcements/page', { params: { pageSize: 5 } }),
       getHotCourses(4),
     ])
-    const ov = overviewRes.data
+    const myCourses = myCourseRes.status === 'fulfilled' ? (myCourseRes.value?.data || []) : []
     stats.value = [
-      { label: '在校学生', value: ov.totalStudents },
-      { label: '教师队伍', value: ov.totalTeachers },
-      { label: '开设课程', value: ov.totalCourses },
-      { label: '院系数量', value: ov.totalDepartments },
+      { label: '我的课程', value: myCourses.length },
+      { label: '平均完成度', value: myCourses.length > 0 ? '--%' : '0%' },
+      { label: '课程中心', value: '探索' },
+      { label: '学习助手', value: 'AI' },
     ]
-    announcements.value = announceRes.data?.list?.slice(0, 5) || []
-    hotCourses.value = hotCourseRes.data || []
+    const announceData = announceRes.status === 'fulfilled' ? (announceRes.value?.data || {}) : {}
+    announcements.value = announceData?.list?.slice(0, 5) || []
+    hotCourses.value = hotCourseRes.status === 'fulfilled' ? (hotCourseRes.value?.data || []) : []
   } catch (e) { /* ignored */ }
 }
 
@@ -133,10 +135,10 @@ async function fetchRecommend() {
       getRecommendResources(4),
     ])
     if (coursesRes.status === 'fulfilled') {
-      recommendCourses.value = coursesRes.value.data || []
+      recommendCourses.value = coursesRes.value?.data || []
     }
     if (resourcesRes.status === 'fulfilled') {
-      recommendResources.value = resourcesRes.value.data || []
+      recommendResources.value = resourcesRes.value?.data || []
     }
   } catch (e) { /* ignored */ }
 }

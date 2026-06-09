@@ -4,8 +4,8 @@ import com.campus.exception.UnauthorizedException;
 import com.campus.result.R;
 import com.campus.utils.JwtUtil;
 import com.campus.utils.PasswordUtil;
-import com.smart.campus.admin.entity.SysUser;
-import com.smart.campus.admin.mappers.SysUserMapper;
+import com.campus.entity.SysUser;
+import com.campus.mappers.SysUserMapper;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.LinkedHashMap;

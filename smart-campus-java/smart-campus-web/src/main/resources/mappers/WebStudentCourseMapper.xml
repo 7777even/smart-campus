@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.smart.campus.web.mappers.WebStudentCourseMapper">
+
+    <resultMap id="BaseResultMap" type="com.campus.entity.StudentCourse">
+        <id column="id" property="id" />
+        <result column="create_time" property="createTime" />
+        <result column="student_id" property="studentId" />
+        <result column="course_id" property="courseId" />
+        <result column="score" property="score" />
+    </resultMap>
+
+    <sql id="BaseColumns">
+        id, create_time, student_id, course_id, score
+    </sql>
+
+    <select id="selectById" resultMap="BaseResultMap">
+        SELECT <include refid="BaseColumns" /> FROM biz_student_course WHERE id = #{id}
+    </select>
+
+    <select id="selectList" resultMap="BaseResultMap">
+        SELECT <include refid="BaseColumns" /> FROM biz_student_course
+        ORDER BY create_time DESC
+    </select>
+
+    <select id="selectCount" resultType="long">
+        SELECT COUNT(*) FROM biz_student_course
+    </select>
+
+    <select id="selectByStudentIdAndCourseId" resultMap="BaseResultMap">
+        SELECT <include refid="BaseColumns" />
+        FROM biz_student_course
+        WHERE student_id = #{studentId} AND course_id = #{courseId}
+    </select>
+
+    <select id="selectCourseIdsByStudentId" resultType="long">
+        SELECT course_id FROM biz_student_course WHERE student_id = #{studentId}
+    </select>
+
+    <insert id="insert" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO biz_student_course (student_id, course_id, create_time)
+        VALUES (#{studentId}, #{courseId}, NOW())
+    </insert>
+
+    <update id="update">
+        UPDATE biz_student_course
+        <set>
+            <if test="score != null">score = #{score},</if>
+        </set>
+        WHERE id = #{id}
+    </update>
+
+    <delete id="deleteById">
+        DELETE FROM biz_student_course WHERE id = #{id}
+    </delete>
+
+</mapper>

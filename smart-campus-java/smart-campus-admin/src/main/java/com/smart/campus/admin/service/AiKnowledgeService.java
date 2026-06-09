@@ -2,8 +2,8 @@ package com.smart.campus.admin.service;
 
 import com.campus.mappers.BaseMapper;
 import com.campus.service.BaseService;
-import com.smart.campus.admin.entity.AiKnowledgeDoc;
-import com.smart.campus.admin.mappers.AiKnowledgeDocMapper;
+import com.campus.entity.AiKnowledgeDoc;
+import com.campus.mappers.AiKnowledgeDocMapper;
 import org.springframework.stereotype.Service;
 
 import java.util.List;

@@ -1,7 +1,7 @@
 package com.smart.campus.admin.service;
 
-import com.smart.campus.admin.entity.*;
-import com.smart.campus.admin.mappers.*;
+import com.campus.entity.*;
+import com.campus.mappers.*;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;

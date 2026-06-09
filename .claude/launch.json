@@ -1,0 +1,26 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "smart-campus-front-web",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": ["run", "dev"],
+      "port": 3000,
+      "cwd": "smart-campus-front/smart-campus-front-web"
+    },
+    {
+      "name": "smart-campus-admin",
+      "runtimeExecutable": "java",
+      "runtimeArgs": ["-jar", "smart-campus-java/smart-campus-admin/target/smart-campus-admin-1.0.0.jar"],
+      "port": 6061,
+      "cwd": "smart-campus-java"
+    },
+    {
+      "name": "smart-campus-web",
+      "runtimeExecutable": "java",
+      "runtimeArgs": ["-jar", "smart-campus-java/smart-campus-web/target/smart-campus-web-1.0.0.jar"],
+      "port": 6060,
+      "cwd": "smart-campus-java"
+    }
+  ]
+}

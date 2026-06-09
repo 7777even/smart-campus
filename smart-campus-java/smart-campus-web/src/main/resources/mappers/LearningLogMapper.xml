@@ -1,0 +1,71 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.smart.campus.web.mappers.LearningLogMapper">
+
+    <resultMap id="BaseResultMap" type="com.smart.campus.web.entity.LearningLog">
+        <id column="id" property="id" />
+        <result column="create_time" property="createTime" />
+        <result column="update_time" property="updateTime" />
+        <result column="student_id" property="studentId" />
+        <result column="course_id" property="courseId" />
+        <result column="lesson_id" property="lessonId" />
+        <result column="log_type" property="logType" />
+        <result column="duration" property="duration" />
+        <result column="detail" property="detail" />
+    </resultMap>
+
+    <sql id="BaseColumns">
+        id, create_time, update_time, student_id, course_id, lesson_id,
+        log_type, duration, detail
+    </sql>
+
+    <select id="selectById" resultMap="BaseResultMap">
+        SELECT <include refid="BaseColumns" /> FROM biz_learning_log WHERE id = #{id}
+    </select>
+
+    <select id="selectList" resultMap="BaseResultMap">
+        SELECT <include refid="BaseColumns" /> FROM biz_learning_log
+        ORDER BY create_time DESC
+    </select>
+
+    <select id="selectCount" resultType="long">
+        SELECT COUNT(*) FROM biz_learning_log
+    </select>
+
+    <insert id="insert" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO biz_learning_log (student_id, course_id, lesson_id, log_type,
+                                      duration, detail, create_time, update_time)
+        VALUES (#{studentId}, #{courseId}, #{lessonId}, #{logType},
+                #{duration}, #{detail}, NOW(), NOW())
+    </insert>
+
+    <update id="update">
+        UPDATE biz_learning_log
+        <set>
+            <if test="studentId != null">student_id = #{studentId},</if>
+            <if test="courseId != null">course_id = #{courseId},</if>
+            <if test="lessonId != null">lesson_id = #{lessonId},</if>
+            <if test="logType != null">log_type = #{logType},</if>
+            <if test="duration != null">duration = #{duration},</if>
+            <if test="detail != null">detail = #{detail},</if>
+            update_time = NOW()
+        </set>
+        WHERE id = #{id}
+    </update>
+
+    <delete id="deleteById">
+        DELETE FROM biz_learning_log WHERE id = #{id}
+    </delete>
+
+    <select id="selectByStudentId" resultMap="BaseResultMap">
+        SELECT <include refid="BaseColumns" /> FROM biz_learning_log
+        WHERE student_id = #{studentId}
+        ORDER BY create_time DESC
+        LIMIT #{pageSize} OFFSET #{pageNo}
+    </select>
+
+    <select id="countByStudentId" resultType="long">
+        SELECT COUNT(*) FROM biz_learning_log WHERE student_id = #{studentId}
+    </select>
+
+</mapper>

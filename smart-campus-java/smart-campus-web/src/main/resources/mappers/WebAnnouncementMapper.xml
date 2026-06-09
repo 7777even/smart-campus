@@ -1,0 +1,71 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.smart.campus.web.mappers.WebAnnouncementMapper">
+
+    <resultMap id="BaseResultMap" type="com.campus.entity.Announcement">
+        <id column="id" property="id" />
+        <result column="title" property="title" />
+        <result column="content" property="content" />
+        <result column="publisher" property="publisher" />
+        <result column="level" property="level" />
+        <result column="status" property="status" />
+        <result column="create_time" property="createTime" />
+        <result column="update_time" property="updateTime" />
+    </resultMap>
+
+    <sql id="BaseColumns">
+        id, title, content, publisher, level, status, create_time, update_time
+    </sql>
+
+    <select id="selectById" resultMap="BaseResultMap">
+        SELECT <include refid="BaseColumns" /> FROM biz_announcement WHERE id = #{id}
+    </select>
+
+    <select id="selectList" resultMap="BaseResultMap">
+        SELECT <include refid="BaseColumns" /> FROM biz_announcement
+        ORDER BY create_time DESC
+    </select>
+
+    <select id="selectCount" resultType="long">
+        SELECT COUNT(*) FROM biz_announcement
+    </select>
+
+    <select id="selectPublishedList" resultMap="BaseResultMap">
+        SELECT <include refid="BaseColumns" /> FROM biz_announcement
+        WHERE status = '已发布'
+        <if test="keyword != null and keyword != ''">
+            AND title LIKE CONCAT('%', #{keyword}, '%')
+        </if>
+        ORDER BY create_time DESC
+        LIMIT #{pageSize} OFFSET #{pageNo}
+    </select>
+
+    <select id="selectPublishedCount" resultType="long">
+        SELECT COUNT(*) FROM biz_announcement
+        WHERE status = '已发布'
+        <if test="keyword != null and keyword != ''">
+            AND title LIKE CONCAT('%', #{keyword}, '%')
+        </if>
+    </select>
+
+    <insert id="insert" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO biz_announcement (title, content, publisher, level, status, create_time, update_time)
+        VALUES (#{title}, #{content}, #{publisher}, #{level}, #{status}, NOW(), NOW())
+    </insert>
+
+    <update id="update">
+        UPDATE biz_announcement
+        SET title = #{title},
+            content = #{content},
+            publisher = #{publisher},
+            level = #{level},
+            status = #{status},
+            update_time = NOW()
+        WHERE id = #{id}
+    </update>
+
+    <delete id="deleteById">
+        DELETE FROM biz_announcement WHERE id = #{id}
+    </delete>
+
+</mapper>

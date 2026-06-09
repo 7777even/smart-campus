@@ -2,7 +2,7 @@ package com.smart.campus.admin.controller;
 
 import com.campus.entity.PageResult;
 import com.campus.result.R;
-import com.smart.campus.admin.entity.Paper;
+import com.campus.entity.Paper;
 import com.smart.campus.admin.service.impl.PaperServiceImpl;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;

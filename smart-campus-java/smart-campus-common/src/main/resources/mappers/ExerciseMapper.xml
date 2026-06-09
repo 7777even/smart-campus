@@ -1,0 +1,106 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.campus.mappers.ExerciseMapper">
+
+    <resultMap id="BaseResultMap" type="com.campus.entity.Exercise">
+        <id column="id" property="id" />
+        <result column="create_time" property="createTime" />
+        <result column="update_time" property="updateTime" />
+        <result column="course_id" property="courseId" />
+        <result column="type" property="type" />
+        <result column="difficulty" property="difficulty" />
+        <result column="question" property="question" />
+        <result column="option_a" property="optionA" />
+        <result column="option_b" property="optionB" />
+        <result column="option_c" property="optionC" />
+        <result column="option_d" property="optionD" />
+        <result column="answer" property="answer" />
+        <result column="analysis" property="analysis" />
+    </resultMap>
+
+    <sql id="BaseColumns">
+        id, create_time, update_time, course_id, type, difficulty, question,
+        option_a, option_b, option_c, option_d, answer, analysis
+    </sql>
+
+    <select id="selectById" resultMap="BaseResultMap">
+        SELECT <include refid="BaseColumns" /> FROM biz_exercise WHERE id = #{id}
+    </select>
+
+    <select id="selectList" resultMap="BaseResultMap">
+        SELECT <include refid="BaseColumns" /> FROM biz_exercise
+        WHERE 1=1
+        <if test="keyword != null and keyword != ''">
+            AND question LIKE CONCAT('%', #{keyword}, '%')
+        </if>
+        <if test="type != null and type != ''">
+            AND type = #{type}
+        </if>
+        <if test="difficulty != null and difficulty != ''">
+            AND difficulty = #{difficulty}
+        </if>
+        <if test="courseId != null">
+            AND course_id = #{courseId}
+        </if>
+        ORDER BY create_time DESC
+        <if test="pageNo != null and pageSize != null">
+            LIMIT #{pageNo}, #{pageSize}
+        </if>
+    </select>
+
+    <select id="selectCount" resultType="long">
+        SELECT COUNT(*) FROM biz_exercise
+        WHERE 1=1
+        <if test="keyword != null and keyword != ''">
+            AND question LIKE CONCAT('%', #{keyword}, '%')
+        </if>
+        <if test="type != null and type != ''">
+            AND type = #{type}
+        </if>
+        <if test="difficulty != null and difficulty != ''">
+            AND difficulty = #{difficulty}
+        </if>
+        <if test="courseId != null">
+            AND course_id = #{courseId}
+        </if>
+    </select>
+
+    <insert id="insert" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO biz_exercise (course_id, type, difficulty, question,
+                                  option_a, option_b, option_c, option_d, answer, analysis,
+                                  create_time, update_time)
+        VALUES (#{courseId}, #{type}, #{difficulty}, #{question},
+                #{optionA}, #{optionB}, #{optionC}, #{optionD}, #{answer}, #{analysis},
+                NOW(), NOW())
+    </insert>
+
+    <update id="update">
+        UPDATE biz_exercise
+        <set>
+            <if test="courseId != null">course_id = #{courseId},</if>
+            <if test="type != null">type = #{type},</if>
+            <if test="difficulty != null">difficulty = #{difficulty},</if>
+            <if test="question != null">question = #{question},</if>
+            <if test="optionA != null">option_a = #{optionA},</if>
+            <if test="optionB != null">option_b = #{optionB},</if>
+            <if test="optionC != null">option_c = #{optionC},</if>
+            <if test="optionD != null">option_d = #{optionD},</if>
+            <if test="answer != null">answer = #{answer},</if>
+            <if test="analysis != null">analysis = #{analysis},</if>
+            update_time = NOW()
+        </set>
+        WHERE id = #{id}
+    </update>
+
+    <delete id="deleteById">
+        DELETE FROM biz_exercise WHERE id = #{id}
+    </delete>
+
+    <delete id="deleteByIds">
+        DELETE FROM biz_exercise WHERE id IN
+        <foreach collection="ids" item="id" open="(" separator="," close=")">
+            #{id}
+        </foreach>
+    </delete>
+
+</mapper>

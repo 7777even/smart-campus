@@ -295,7 +295,6 @@
                                     <limits>
                                         <limit>
                                             <counter>LINE</counter>
-                                            <value>COVERED_RATIO</value>
                                             <minimum>0.00</minimum>
                                         </limit>
                                     </limits>

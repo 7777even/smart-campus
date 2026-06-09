@@ -2,8 +2,8 @@ package com.smart.campus.admin.service;
 
 import com.campus.mappers.BaseMapper;
 import com.campus.service.BaseService;
-import com.smart.campus.admin.entity.SysPermission;
-import com.smart.campus.admin.mappers.SysPermissionMapper;
+import com.campus.entity.SysPermission;
+import com.campus.mappers.SysPermissionMapper;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 

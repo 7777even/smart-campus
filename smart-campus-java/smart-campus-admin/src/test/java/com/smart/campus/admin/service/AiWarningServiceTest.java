@@ -1,7 +1,7 @@
 package com.smart.campus.admin.service;
 
-import com.smart.campus.admin.entity.AiEarlyWarning;
-import com.smart.campus.admin.entity.AiStudentProfile;
+import com.campus.entity.AiEarlyWarning;
+import com.campus.entity.AiStudentProfile;
 import com.smart.campus.admin.mappers.AiEarlyWarningMapper;
 import com.smart.campus.admin.mappers.AiStudentProfileMapper;
 import org.junit.jupiter.api.BeforeEach;

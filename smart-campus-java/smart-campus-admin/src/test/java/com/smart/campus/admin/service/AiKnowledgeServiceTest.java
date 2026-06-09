@@ -1,6 +1,6 @@
 package com.smart.campus.admin.service;
 
-import com.smart.campus.admin.entity.AiKnowledgeDoc;
+import com.campus.entity.AiKnowledgeDoc;
 import com.smart.campus.admin.mappers.AiKnowledgeDocMapper;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;

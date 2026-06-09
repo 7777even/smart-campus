@@ -16,7 +16,7 @@
         </div>
 
         <div v-loading="loading" class="course-grid">
-          <el-card v-for="c in allList" :key="c.id" class="course-card" shadow="hover">
+          <el-card v-for="c in allList" :key="c.id" class="course-card" shadow="hover" @click="goToCourse(c)">
             <h4>{{ c.name }}</h4>
             <p class="teacher">{{ c.teacherName || '待定' }}</p>
             <div class="meta">
@@ -56,7 +56,7 @@
       <el-tab-pane label="推荐课程" name="recommend">
         <div v-loading="recommendLoading" class="course-grid">
           <template v-if="recommendList.length > 0">
-            <el-card v-for="c in recommendList" :key="c.id" class="course-card" shadow="hover">
+            <el-card v-for="c in recommendList" :key="c.id" class="course-card" shadow="hover" @click="goToCourse(c)">
               <h4>{{ c.name }}</h4>
               <p class="teacher">{{ c.teacherName || '待定' }}</p>
               <div class="meta">
@@ -86,7 +86,7 @@
       <el-tab-pane label="我的课程" name="my">
         <div v-loading="myLoading" class="course-grid">
           <template v-if="myList.length > 0">
-            <el-card v-for="c in myList" :key="c.id" class="course-card" shadow="hover">
+            <el-card v-for="c in myList" :key="c.id" class="course-card" shadow="hover" @click="goToCourse(c)">
               <h4>{{ c.name }}</h4>
               <p class="teacher">{{ c.teacherName || '待定' }}</p>
               <div class="meta">
@@ -114,15 +114,15 @@
 
 <script setup>
 import { ref, onMounted } from 'vue'
-import { useRoute } from 'vue-router'
+import { useRouter } from 'vue-router'
 import { ElMessage, ElMessageBox } from 'element-plus'
-import request from '@/api/request'
+import { getCoursePage } from '@/api/course'
 import { enrollCourse, dropCourse, getMyCourses } from '@/api/enrollment'
 import { getRecommendCourses } from '@/api/recommend'
 
-const route = useRoute()
+const router = useRouter()
 
-const activeTab = ref(route.query.tab === 'recommend' ? 'recommend' : 'all')
+const activeTab = ref('all')
 
 // All courses
 const keyword = ref('')
@@ -163,9 +163,7 @@ async function fetchEnrolledMap() {
 async function fetchAllCourses() {
   loading.value = true
   try {
-    const res = await request.get('/courses/page', {
-      params: { keyword: keyword.value, type: typeFilter.value, pageNo: allPageNo.value, pageSize: allPageSize.value },
-    })
+    const res = await getCoursePage({ keyword: keyword.value, type: typeFilter.value, pageNo: allPageNo.value, pageSize: allPageSize.value })
     allList.value = res.data?.list || []
     allTotal.value = res.data?.totalCount || 0
   } catch (e) { /* ignored */ }
@@ -229,6 +227,10 @@ async function handleDrop(course) {
     ElMessage.error(e.response?.data?.msg || '退课失败')
   }
   finally { droppingId.value = null }
+}
+
+function goToCourse(c) {
+  router.push(`/course/${c.id}`)
 }
 
 function handleTabChange(tab) {

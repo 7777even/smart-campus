@@ -26,11 +26,12 @@
 import { ref, reactive } from 'vue'
 import { useRouter } from 'vue-router'
 import { ElMessage } from 'element-plus'
-import request from '@/api/request'
+import { useUserStore } from '@/stores/user'
 
 const router = useRouter()
 const formRef = ref(null)
 const loading = ref(false)
+const userStore = useUserStore()
 
 const form = reactive({ username: 'student1', password: '123456' })
 const rules = {
@@ -44,10 +45,7 @@ async function handleLogin() {
 
   loading.value = true
   try {
-    const res = await request.post('/auth/login', { username: form.username, password: form.password })
-    const { token, user } = res.data
-    localStorage.setItem('portal_token', token)
-    localStorage.setItem('portal_user', JSON.stringify(user))
+    await userStore.login(form.username, form.password)
     ElMessage.success('登录成功')
     router.push('/home')
   } catch (e) {

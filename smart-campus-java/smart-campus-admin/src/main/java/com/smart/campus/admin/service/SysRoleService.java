@@ -2,8 +2,8 @@ package com.smart.campus.admin.service;
 
 import com.campus.mappers.BaseMapper;
 import com.campus.service.BaseService;
-import com.smart.campus.admin.entity.SysRole;
-import com.smart.campus.admin.mappers.SysRoleMapper;
+import com.campus.entity.SysRole;
+import com.campus.mappers.SysRoleMapper;
 import org.springframework.stereotype.Service;
 
 @Service
