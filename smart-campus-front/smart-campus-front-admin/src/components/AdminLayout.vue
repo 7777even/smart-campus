@@ -1,9 +1,25 @@
 <script setup>
-import { computed } from 'vue'
+import { computed, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
+import { useUserStore } from '@/stores/user'
+import { getUserInfo } from '@/api/auth'
 
 const route = useRoute()
 const router = useRouter()
+const userStore = useUserStore()
+
+const displayName = computed(() => userStore.realName || '管理员')
+
+onMounted(async () => {
+  if (userStore.isLoggedIn && !userStore.userInfo) {
+    try {
+      await getUserInfo()
+      // getUserInfo updates the store internally via fetchUserInfo
+    } catch {
+      // already logged out
+    }
+  }
+})
 
 const menuData = [
   {
@@ -47,7 +63,8 @@ const menuData = [
     children: [
       { name: 'AI 助教', path: '/ai/chat' },
       { name: '知识库', path: '/ai/knowledge' },
-      { name: '学业预警', path: '/ai/warning' }
+      { name: '学业预警', path: '/ai/warning' },
+      { name: '学业画像', path: '/ai/profile' }
     ]
   },
   {
@@ -85,6 +102,17 @@ function isSubActive(path) {
 function goTo(path) {
   router.push(path)
 }
+
+async function handleLogoutCommand(command) {
+  if (command === 'logout') {
+    await handleLogout()
+  }
+}
+
+async function handleLogout() {
+  await userStore.logout()
+  router.push('/login')
+}
 </script>
 
 <template>
@@ -115,14 +143,29 @@ function goTo(path) {
       </nav>
 
       <div class="topbar-right">
-        <div class="user">
-          <span class="user-avatar">
-            <svg viewBox="0 0 24 24" fill="#909399">
-              <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z" />
+        <el-dropdown @command="handleLogoutCommand">
+          <div class="user">
+            <span class="user-avatar">
+              <svg viewBox="0 0 24 24" fill="#909399">
+                <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z" />
+              </svg>
+            </span>
+            <span class="user-name">{{ displayName }}</span>
+            <svg style="width:12px;height:12px;margin-left:4px" viewBox="0 0 1024 1024" fill="#909399">
+              <path d="M512 742.9l352.7-352.7c25-25 25-65.5 0-90.5s-65.5-25-90.5 0L512 656.9 249.8 399.7c-25-25-65.5-25-90.5 0s-25 65.5 0 90.5L461.5 742.9c12.5 12.5 28.9 18.8 45.3 18.8s32.8-6.3 45.3-18.8z"/>
             </svg>
-          </span>
-          <span class="user-name">管理员</span>
-        </div>
+          </div>
+          <template #dropdown>
+            <el-dropdown-menu>
+              <el-dropdown-item command="logout">
+                <svg style="width:14px;height:14px;vertical-align:middle;margin-right:4px" viewBox="0 0 1024 1024" fill="#909399">
+                  <path d="M224 576v-128h256v-512H224C164.7 64 112 116.7 112 176v672c0 59.3 52.7 112 112 112h256V768H224V576zm704-192H640V224l192 160z"/>
+                </svg>
+                退出登录
+              </el-dropdown-item>
+            </el-dropdown-menu>
+          </template>
+        </el-dropdown>
       </div>
     </header>
 
@@ -255,7 +298,14 @@ $shadow-card: 0 2px 12px rgba(0, 0, 0, 0.06);
   display: flex;
   align-items: center;
   gap: 8px;
-  cursor: default;
+  cursor: pointer;
+  padding: 6px 12px;
+  border-radius: 8px;
+  transition: background 0.2s;
+
+  &:hover {
+    background: #ecf5ff;
+  }
 
   .user-avatar {
     width: 32px;

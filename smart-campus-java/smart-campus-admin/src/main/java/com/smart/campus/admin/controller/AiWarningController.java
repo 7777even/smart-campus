@@ -8,7 +8,6 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -48,9 +47,7 @@ public class AiWarningController {
     @GetMapping("/student/{studentId}")
     @Operation(summary = "获取学生预警列表")
     public R<List<AiEarlyWarning>> getByStudentId(@PathVariable Long studentId) {
-        // 暂按学生 ID 通过 page 方式查询（需要 warningService 扩展支持）
-        Map<String, Object> params = new HashMap<>();
-        return R.ok(Collections.emptyList());
+        return R.ok(warningService.getByStudentId(studentId));
     }
 
     @PostMapping("/evaluate/{profileId}")

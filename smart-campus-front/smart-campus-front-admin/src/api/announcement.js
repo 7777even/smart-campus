@@ -24,5 +24,5 @@ export function deleteAnnouncement(id) {
 }
 
 export function togglePublish(id) {
-  return request.put(`/announcements/${id}/toggle`)
+  return request.put(`/announcements/${id}/toggle-publish`)
 }

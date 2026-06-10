@@ -1,12 +1,11 @@
 package com.smart.campus.admin.controller;
 
 import com.campus.entity.PageResult;
-import com.campus.result.R;
 import com.campus.entity.Teacher;
-import com.smart.campus.admin.service.impl.TeacherServiceImpl;
+import com.campus.result.R;
+import com.campus.service.BaseService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -15,15 +14,14 @@ import java.util.Map;
 /**
  * 教师管理接口
  */
+@Tag(name = "教师管理")
 @RestController
 @RequestMapping("/teachers")
-@Tag(name = "教师管理")
 public class TeacherController {
 
-    private final TeacherServiceImpl teacherService;
+    private final BaseService<Teacher> teacherService;
 
-    @Autowired
-    public TeacherController(TeacherServiceImpl teacherService) {
+    public TeacherController(BaseService<Teacher> teacherService) {
         this.teacherService = teacherService;
     }
 

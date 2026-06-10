@@ -1,12 +1,11 @@
 package com.smart.campus.admin.controller;
 
+import com.campus.entity.Clazz;
 import com.campus.entity.PageResult;
 import com.campus.result.R;
-import com.campus.entity.Clazz;
-import com.smart.campus.admin.service.impl.ClazzServiceImpl;
+import com.campus.service.BaseService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -15,15 +14,14 @@ import java.util.Map;
 /**
  * 班级管理接口
  */
+@Tag(name = "班级管理")
 @RestController
 @RequestMapping("/classes")
-@Tag(name = "班级管理")
 public class ClazzController {
 
-    private final ClazzServiceImpl clazzService;
+    private final BaseService<Clazz> clazzService;
 
-    @Autowired
-    public ClazzController(ClazzServiceImpl clazzService) {
+    public ClazzController(BaseService<Clazz> clazzService) {
         this.clazzService = clazzService;
     }
 

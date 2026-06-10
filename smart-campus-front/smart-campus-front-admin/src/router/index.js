@@ -1,4 +1,5 @@
 import { createRouter, createWebHistory } from 'vue-router'
+import { useUserStore } from '@/stores/user'
 
 const routes = [
   {
@@ -27,6 +28,7 @@ const routes = [
       { path: 'ai/chat', name: 'AI 助教', component: () => import('@/views/ai/Chat.vue') },
       { path: 'ai/knowledge', name: '知识库', component: () => import('@/views/ai/Knowledge.vue') },
       { path: 'ai/warning', name: '学业预警', component: () => import('@/views/ai/Warning.vue') },
+      { path: 'ai/profile', name: '学业画像', component: () => import('@/views/ai/Profile.vue') },
       { path: 'permissions', name: '权限管理', component: () => import('@/views/permissions/Index.vue') },
     ],
   },
@@ -43,8 +45,8 @@ router.beforeEach((to, from, next) => {
     next()
     return
   }
-  const token = localStorage.getItem('token')
-  if (!token) {
+  const userStore = useUserStore()
+  if (!userStore.isLoggedIn) {
     next('/login')
   } else {
     next()

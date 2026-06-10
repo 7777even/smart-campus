@@ -1,9 +1,12 @@
 package com.smart.campus.admin.controller;
 
 import com.campus.entity.PageResult;
-import com.campus.result.R;
 import com.campus.entity.Paper;
-import com.smart.campus.admin.service.impl.PaperServiceImpl;
+import com.campus.result.R;
+import com.campus.service.BaseService;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
+import com.smart.campus.admin.biz.PaperAdminBiz;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.web.bind.annotation.*;
@@ -13,17 +16,19 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * 试卷 Controller
+ * 试卷控制器（管理端）
  */
+@Tag(name = "试卷管理")
 @RestController
 @RequestMapping("/papers")
-@Tag(name = "试卷管理")
 public class PaperController {
 
-    private final PaperServiceImpl paperService;
+    private final BaseService<Paper> paperService;
+    private final PaperAdminBiz paperAdminBiz;
 
-    public PaperController(PaperServiceImpl paperService) {
+    public PaperController(BaseService<Paper> paperService, PaperAdminBiz paperAdminBiz) {
         this.paperService = paperService;
+        this.paperAdminBiz = paperAdminBiz;
     }
 
     @GetMapping("/page")
@@ -85,6 +90,13 @@ public class PaperController {
     @Operation(summary = "批量删除试卷")
     public R<Void> deleteBatch(@RequestBody Map<String, List<Long>> request) {
         paperService.deleteBatch(request.get("ids"));
+        return R.ok();
+    }
+
+    @PutMapping("/{id}/publish")
+    @Operation(summary = "发布试卷")
+    public R<Void> publish(@PathVariable Long id) {
+        paperAdminBiz.publish(id);
         return R.ok();
     }
 }

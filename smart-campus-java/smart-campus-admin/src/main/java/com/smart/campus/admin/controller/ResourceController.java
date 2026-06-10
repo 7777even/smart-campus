@@ -1,9 +1,12 @@
 package com.smart.campus.admin.controller;
 
 import com.campus.entity.PageResult;
-import com.campus.result.R;
 import com.campus.entity.Resource;
-import com.smart.campus.admin.service.impl.ResourceServiceImpl;
+import com.campus.result.R;
+import com.campus.service.BaseService;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
+import com.smart.campus.admin.biz.ResourceAdminBiz;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.web.bind.annotation.*;
@@ -13,17 +16,19 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * 资源 Controller
+ * 资源控制器（管理端）
  */
+@Tag(name = "资源管理")
 @RestController
 @RequestMapping("/resources")
-@Tag(name = "资源管理")
 public class ResourceController {
 
-    private final ResourceServiceImpl resourceService;
+    private final BaseService<Resource> resourceService;
+    private final ResourceAdminBiz resourceAdminBiz;
 
-    public ResourceController(ResourceServiceImpl resourceService) {
+    public ResourceController(BaseService<Resource> resourceService, ResourceAdminBiz resourceAdminBiz) {
         this.resourceService = resourceService;
+        this.resourceAdminBiz = resourceAdminBiz;
     }
 
     @GetMapping("/page")
@@ -86,5 +91,18 @@ public class ResourceController {
     public R<Void> deleteBatch(@RequestBody Map<String, List<Long>> request) {
         resourceService.deleteBatch(request.get("ids"));
         return R.ok();
+    }
+
+    @PostMapping("/upload")
+    @Operation(summary = "上传资源文件")
+    public R<Resource> upload(
+            @RequestParam("file") org.springframework.web.multipart.MultipartFile file,
+            @RequestParam(value = "name", required = false) String name,
+            @RequestParam(value = "type", required = false, defaultValue = "其他") String type,
+            @RequestParam(value = "category", required = false, defaultValue = "课程资料") String category,
+            @RequestParam(value = "description", required = false) String description) {
+        Resource resource = resourceAdminBiz.buildResource(file, name, type, category, description);
+        resourceService.save(resource);
+        return R.ok(resource);
     }
 }

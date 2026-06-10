@@ -1,9 +1,9 @@
 package com.smart.campus.admin.controller;
 
+import com.campus.entity.Exam;
 import com.campus.entity.PageResult;
 import com.campus.result.R;
-import com.campus.entity.Exam;
-import com.smart.campus.admin.service.impl.ExamServiceImpl;
+import com.campus.service.BaseService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.web.bind.annotation.*;
@@ -13,16 +13,16 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * 考试 Controller
+ * 考试控制器（管理端）
  */
+@Tag(name = "考试管理")
 @RestController
 @RequestMapping("/exams")
-@Tag(name = "考试管理")
 public class ExamController {
 
-    private final ExamServiceImpl examService;
+    private final BaseService<Exam> examService;
 
-    public ExamController(ExamServiceImpl examService) {
+    public ExamController(BaseService<Exam> examService) {
         this.examService = examService;
     }
 

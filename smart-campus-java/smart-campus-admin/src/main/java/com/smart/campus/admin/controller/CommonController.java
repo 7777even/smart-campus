@@ -1,6 +1,9 @@
 package com.smart.campus.admin.controller;
 
+import com.campus.exception.BusinessException;
 import com.campus.result.R;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.web.bind.annotation.*;
 
@@ -13,6 +16,7 @@ import java.util.*;
 @RequestMapping("/common")
 public class CommonController {
 
+    private static final Logger log = LoggerFactory.getLogger(CommonController.class);
     private final JdbcTemplate jdbcTemplate;
 
     public CommonController(JdbcTemplate jdbcTemplate) {
@@ -29,7 +33,8 @@ public class CommonController {
                     "SELECT id, name FROM sys_department ORDER BY sort ASC");
             return R.ok(list);
         } catch (Exception e) {
-            return R.ok(Collections.emptyList());
+            log.error("查询院系下拉列表失败", e);
+            throw new BusinessException("查询院系数据失败: " + e.getMessage());
         }
     }
 
@@ -50,7 +55,8 @@ public class CommonController {
                 return R.ok(list);
             }
         } catch (Exception e) {
-            return R.ok(Collections.emptyList());
+            log.error("查询专业下拉列表失败", e);
+            throw new BusinessException("查询专业数据失败: " + e.getMessage());
         }
     }
 
@@ -64,7 +70,8 @@ public class CommonController {
                     "SELECT id, name FROM sys_teacher ORDER BY name");
             return R.ok(list);
         } catch (Exception e) {
-            return R.ok(Collections.emptyList());
+            log.error("查询教师下拉列表失败", e);
+            throw new BusinessException("查询教师数据失败: " + e.getMessage());
         }
     }
 
@@ -78,7 +85,8 @@ public class CommonController {
                     "SELECT id, name FROM sys_class ORDER BY name");
             return R.ok(list);
         } catch (Exception e) {
-            return R.ok(Collections.emptyList());
+            log.error("查询班级下拉列表失败", e);
+            throw new BusinessException("查询班级数据失败: " + e.getMessage());
         }
     }
 
@@ -92,7 +100,8 @@ public class CommonController {
                     "SELECT id, name FROM biz_course ORDER BY name");
             return R.ok(list);
         } catch (Exception e) {
-            return R.ok(Collections.emptyList());
+            log.error("查询课程下拉列表失败", e);
+            throw new BusinessException("查询课程数据失败: " + e.getMessage());
         }
     }
 }

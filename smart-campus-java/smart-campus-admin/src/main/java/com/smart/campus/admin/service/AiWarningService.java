@@ -51,6 +51,13 @@ public class AiWarningService {
     }
 
     /**
+     * 根据学生 ID 获取预警列表
+     */
+    public List<AiEarlyWarning> getByStudentId(Long studentId) {
+        return warningMapper.selectByStudentId(studentId);
+    }
+
+    /**
      * 分页查询预警
      */
     public PageResult<AiEarlyWarning> page(int pageNo, int pageSize, Map<String, Object> params) {

@@ -1,12 +1,11 @@
 package com.smart.campus.admin.controller;
 
+import com.campus.entity.Major;
 import com.campus.entity.PageResult;
 import com.campus.result.R;
-import com.campus.entity.Major;
-import com.smart.campus.admin.service.impl.MajorServiceImpl;
+import com.campus.service.BaseService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -15,15 +14,14 @@ import java.util.Map;
 /**
  * 专业管理接口
  */
+@Tag(name = "专业管理")
 @RestController
 @RequestMapping("/majors")
-@Tag(name = "专业管理")
 public class MajorController {
 
-    private final MajorServiceImpl majorService;
+    private final BaseService<Major> majorService;
 
-    @Autowired
-    public MajorController(MajorServiceImpl majorService) {
+    public MajorController(BaseService<Major> majorService) {
         this.majorService = majorService;
     }
 
