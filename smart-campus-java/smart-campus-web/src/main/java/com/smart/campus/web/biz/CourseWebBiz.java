@@ -129,8 +129,6 @@ public class CourseWebBiz {
     public List<Map<String, Object>> getSchedule(Long studentId) {
         List<Map<String, Object>> courses = getMyCourses(studentId);
         for (Map<String, Object> c : courses) {
-            c.put("scheduleTime", "待安排");
-            c.put("location", "待安排");
             c.put("enrolled", true);
         }
         return courses;
@@ -147,6 +145,7 @@ public class CourseWebBiz {
         m.put("credit", c.getCredit());
         m.put("hours", c.getHours());
         m.put("teacherName", c.getTeacherName());
+        m.put("location", c.getLocation());
         m.put("description", c.getDescription());
         m.put("cover", c.getCover());
         m.put("status", c.getStatus());

@@ -38,4 +38,11 @@ public class AuthController {
     public R<Map<String, Object>> info(@RequestAttribute Long userId) {
         return R.ok(authWebBiz.getUserInfo(userId));
     }
+
+    @PostMapping("/logout")
+    @Operation(summary = "退出登录")
+    public R<Void> logout(@RequestAttribute Long userId) {
+        // JWT 无服务端状态，清除前端 token 即完成登出
+        return R.ok(null);
+    }
 }

@@ -67,6 +67,7 @@
 
 <script setup>
 import { ref, computed, onMounted } from 'vue'
+import { getExamResults } from '@/api/exam'
 
 const loading = ref(false)
 const results = ref([])
@@ -102,8 +103,8 @@ function statusTag(status) {
 async function fetchResults() {
   loading.value = true
   try {
-    // 学生端暂无成绩列表接口，使用空数据占位
-    results.value = []
+    const res = await getExamResults()
+    results.value = res.data || []
   } catch {
     results.value = []
   } finally {

@@ -53,9 +53,9 @@
         SELECT COUNT(*) FROM biz_exercise
     </select>
 
-    <select id="selectByCourseId" resultMap="ListResultMap">
+    <select id="selectByCourseId" resultMap="BaseResultMap">
         SELECT id, create_time, update_time, course_id, type, difficulty, question,
-               option_a, option_b, option_c, option_d, analysis
+               option_a, option_b, option_c, option_d, answer, analysis
         FROM biz_exercise
         WHERE course_id = #{courseId}
         ORDER BY create_time DESC

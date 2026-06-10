@@ -30,6 +30,9 @@ public class LearningController {
     public R<Map<String, Object>> getProgress(
             @RequestAttribute(required = false) Long studentId,
             @RequestParam String courseId) {
+        if (courseId == null || courseId.isEmpty() || courseId.equals("undefined") || courseId.equals("null")) {
+            return R.fail("课程ID不能为空");
+        }
         return R.ok(learningWebBiz.getProgress(studentId, courseId));
     }
 

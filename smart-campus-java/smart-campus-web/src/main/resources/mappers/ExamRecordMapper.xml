@@ -1,0 +1,82 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.smart.campus.web.mappers.ExamRecordMapper">
+
+    <resultMap id="BaseResultMap" type="com.smart.campus.web.entity.ExamRecord">
+        <id column="id" property="id" />
+        <result column="create_time" property="createTime" />
+        <result column="update_time" property="updateTime" />
+        <result column="exam_id" property="examId" />
+        <result column="student_id" property="studentId" />
+        <result column="score" property="score" />
+        <result column="status" property="status" />
+    </resultMap>
+
+    <sql id="BaseColumns">
+        id, create_time, update_time, exam_id, student_id, score, status
+    </sql>
+
+    <select id="selectById" resultMap="BaseResultMap">
+        SELECT <include refid="BaseColumns" /> FROM biz_exam_student WHERE id = #{id}
+    </select>
+
+    <select id="selectList" resultMap="BaseResultMap">
+        SELECT <include refid="BaseColumns" /> FROM biz_exam_student
+        ORDER BY create_time DESC
+    </select>
+
+    <select id="selectCount" resultType="long">
+        SELECT COUNT(*) FROM biz_exam_student
+    </select>
+
+    <select id="selectByExamAndStudent" resultMap="BaseResultMap">
+        SELECT <include refid="BaseColumns" /> FROM biz_exam_student
+        WHERE exam_id = #{examId} AND student_id = #{studentId}
+    </select>
+
+    <select id="selectByStudentId" resultMap="BaseResultMap">
+        SELECT <include refid="BaseColumns" /> FROM biz_exam_student
+        WHERE student_id = #{studentId}
+        ORDER BY create_time DESC
+    </select>
+
+    <insert id="insert" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO biz_exam_student (exam_id, student_id, score, status, create_time, update_time)
+        VALUES (#{examId}, #{studentId}, #{score}, #{status}, NOW(), NOW())
+    </insert>
+
+    <insert id="insertSelective" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO biz_exam_student
+        <trim prefix="(" suffix=")" suffixOverrides=",">
+            <if test="examId != null">exam_id,</if>
+            <if test="studentId != null">student_id,</if>
+            <if test="score != null">score,</if>
+            <if test="status != null">status,</if>
+            create_time, update_time
+        </trim>
+        <trim prefix="VALUES (" suffix=")" suffixOverrides=",">
+            <if test="examId != null">#{examId},</if>
+            <if test="studentId != null">#{studentId},</if>
+            <if test="score != null">#{score},</if>
+            <if test="status != null">#{status},</if>
+            NOW(), NOW()
+        </trim>
+    </insert>
+
+    <update id="update">
+        UPDATE biz_exam_student
+        <set>
+            <if test="examId != null">exam_id = #{examId},</if>
+            <if test="studentId != null">student_id = #{studentId},</if>
+            <if test="score != null">score = #{score},</if>
+            <if test="status != null">status = #{status},</if>
+            update_time = NOW()
+        </set>
+        WHERE id = #{id}
+    </update>
+
+    <delete id="deleteById">
+        DELETE FROM biz_exam_student WHERE id = #{id}
+    </delete>
+
+</mapper>

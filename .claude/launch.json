@@ -9,6 +9,13 @@
       "cwd": "smart-campus-front/smart-campus-front-web"
     },
     {
+      "name": "smart-campus-front-admin",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": ["run", "dev"],
+      "port": 3001,
+      "cwd": "smart-campus-front/smart-campus-front-admin"
+    },
+    {
       "name": "smart-campus-admin",
       "runtimeExecutable": "java",
       "runtimeArgs": ["-jar", "smart-campus-java/smart-campus-admin/target/smart-campus-admin-1.0.0.jar"],

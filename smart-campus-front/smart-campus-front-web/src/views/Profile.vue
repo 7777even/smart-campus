@@ -71,9 +71,10 @@
 
 <script setup>
 import { ref, computed, onMounted } from 'vue'
-import request from '@/api/request'
-import { getMyCourses } from '@/api/enrollment'
+import { getUserBasic, getProfileStats, getAcademicProfile, getAcademicWarnings } from '@/api/profile'
+import { useUserStore } from '@/stores/user'
 
+const userStore = useUserStore()
 const user = ref(JSON.parse(localStorage.getItem('portal_user') || '{}'))
 
 const roleLabel = computed(() => {
@@ -96,7 +97,7 @@ async function fetchProfile() {
   try {
     const studentId = user.value.studentId
     if (!studentId) return
-    const res = await request.get(`/ai/profile/student/${studentId}`)
+    const res = await getAcademicProfile(studentId)
     profile.value = res?.data
     if (profile.value) {
       stats.value.avgScore = Math.round(profile.value.comprehensiveScore || 0)
@@ -108,16 +109,15 @@ async function fetchWarnings() {
   try {
     const studentId = user.value.studentId
     if (!studentId) return
-    const res = await request.get(`/ai/profile/warning/student/${studentId}`)
+    const res = await getAcademicWarnings(studentId)
     warnings.value = res?.data || []
   } catch (e) { /* ignored */ }
 }
 
 async function fetchEnrollments() {
   try {
-    const res = await getMyCourses()
-    const courses = res?.data || []
-    stats.value.enrolledCourses = courses.length
+    const res = await getProfileStats()
+    stats.value.enrolledCourses = res.enrolledCourses
   } catch (e) { /* ignored */ }
 }
 

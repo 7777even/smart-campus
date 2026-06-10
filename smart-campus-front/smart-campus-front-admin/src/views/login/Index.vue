@@ -62,10 +62,12 @@ import { useRouter } from 'vue-router'
 import { ElMessage } from 'element-plus'
 import { UserFilled, Lock } from '@element-plus/icons-vue'
 import { login } from '@/api/auth'
+import { useUserStore } from '@/stores/user'
 
 const router = useRouter()
 const formRef = ref(null)
 const loading = ref(false)
+const userStore = useUserStore()
 
 const form = reactive({
   username: 'admin',
@@ -87,10 +89,7 @@ async function handleLogin() {
 
   loading.value = true
   try {
-    const res = await login({ username: form.username, password: form.password })
-    const { token, user } = res.data
-    localStorage.setItem('token', token)
-    localStorage.setItem('user', JSON.stringify(user))
+    await userStore.login(form.username, form.password)
     ElMessage.success('登录成功')
     router.push('/dashboard')
   } catch (e) {

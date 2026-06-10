@@ -130,12 +130,17 @@ function typeIcon(type) {
 }
 
 async function loadCourse() {
+  const id = route.params.id
+  if (!id) {
+    ElMessage.error('缺少课程ID')
+    return
+  }
   loading.value = true
   try {
-    const res = await getCourseDetail(route.params.id)
-    course.value = res.data || {}
-  } catch {
-    ElMessage.error('加载课程失败')
+    const res = await getCourseDetail(id)
+    course.value = res || {}
+  } catch (e) {
+    ElMessage.error(e?.response?.data?.msg || '加载课程失败')
   } finally {
     loading.value = false
   }
@@ -153,9 +158,10 @@ async function loadChapters() {
 }
 
 async function loadProgress() {
+  if (!course.value?.id) return
   if (!studentId.value) return
   try {
-    const res = await getProgress(course.value?.id)
+    const res = await getProgress(course.value.id)
     const data = res.data
     if (data) {
       completedCount.value = data.completedLessons || 0

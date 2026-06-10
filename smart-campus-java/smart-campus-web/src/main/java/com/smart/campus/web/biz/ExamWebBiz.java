@@ -1,9 +1,14 @@
 package com.smart.campus.web.biz;
 
+import com.campus.entity.Course;
 import com.campus.entity.Exam;
 import com.campus.entity.Exercise;
 import com.campus.entity.StudentCourse;
+import com.campus.mappers.CourseMapper;
+import com.campus.mappers.ExamMapper;
 import com.campus.mappers.StudentCourseMapper;
+import com.smart.campus.web.entity.ExamRecord;
+import com.smart.campus.web.mappers.ExamRecordMapper;
 import com.smart.campus.web.mappers.WebExamMapper;
 import com.smart.campus.web.mappers.WebExerciseMapper;
 import org.springframework.stereotype.Component;
@@ -19,13 +24,22 @@ public class ExamWebBiz {
     private final WebExamMapper examMapper;
     private final WebExerciseMapper exerciseMapper;
     private final StudentCourseMapper studentCourseMapper;
+    private final ExamRecordMapper examRecordMapper;
+    private final ExamMapper examMapperCommon;
+    private final CourseMapper courseMapper;
 
     public ExamWebBiz(WebExamMapper examMapper,
                       WebExerciseMapper exerciseMapper,
-                      StudentCourseMapper studentCourseMapper) {
+                      StudentCourseMapper studentCourseMapper,
+                      ExamRecordMapper examRecordMapper,
+                      ExamMapper examMapperCommon,
+                      CourseMapper courseMapper) {
         this.examMapper = examMapper;
         this.exerciseMapper = exerciseMapper;
         this.studentCourseMapper = studentCourseMapper;
+        this.examRecordMapper = examRecordMapper;
+        this.examMapperCommon = examMapperCommon;
+        this.courseMapper = courseMapper;
     }
 
     /**
@@ -127,7 +141,7 @@ public class ExamWebBiz {
      * 提交答卷并自动评分
      */
     public Map<String, Object> submitAnswers(Long studentId, String examId, Map<String, String> answers) {
-        Exam exam = examMapper.selectById(Long.valueOf(examId));
+        Exam exam = examMapperCommon.selectById(Long.valueOf(examId));
         if (exam == null) {
             throw new RuntimeException("考试不存在");
         }
@@ -147,11 +161,70 @@ public class ExamWebBiz {
             }
         }
 
+        // 持久化考试成绩
+        ExamRecord existing = examRecordMapper.selectByExamAndStudent(exam.getId(), studentId);
+        if (existing != null) {
+            existing.setScore(totalScore);
+            existing.setStatus(correctCount > 0 ? "正常" : "缺考");
+            examRecordMapper.update(existing);
+        } else {
+            ExamRecord record = new ExamRecord();
+            record.setExamId(exam.getId());
+            record.setStudentId(studentId);
+            record.setScore(totalScore);
+            record.setStatus(correctCount > 0 ? "正常" : "缺考");
+            examRecordMapper.insert(record);
+        }
+
+        // 更新实考人数
+        exam.setAttendedStudents(exam.getAttendedStudents() + 1);
+        examMapperCommon.update(exam);
+
         Map<String, Object> result = new HashMap<>();
         result.put("totalScore", totalScore);
         result.put("correctCount", correctCount);
         result.put("totalCount", exercises.size());
         result.put("scorePerQuestion", scorePerQuestion);
+        return result;
+    }
+
+    /**
+     * 成绩查询（学生端）
+     */
+    public List<Map<String, Object>> getExamResults(Long studentId) {
+        List<ExamRecord> records = examRecordMapper.selectByStudentId(studentId);
+        if (records.isEmpty()) {
+            return Collections.emptyList();
+        }
+
+        List<Map<String, Object>> result = new ArrayList<>();
+        for (ExamRecord record : records) {
+            Exam exam = examMapperCommon.selectById(record.getExamId());
+            if (exam == null) continue;
+
+            Map<String, Object> m = new HashMap<>();
+            m.put("examId", String.valueOf(exam.getId()));
+            m.put("examName", exam.getName());
+            m.put("courseId", exam.getCourseId());
+            m.put("score", record.getScore());
+            m.put("status", record.getStatus());
+            m.put("examDate", exam.getExamDate());
+
+            // 通过 courseId 查课程名称
+            Course course = courseMapper.selectById(exam.getCourseId());
+            m.put("courseName", course != null ? course.getName() : "未知课程");
+
+            // 正确/总题数从考试关联的习题估算
+            List<Exercise> exercises = exerciseMapper.selectByCourseId(String.valueOf(exam.getCourseId()));
+            int total = exercises.size();
+            int correct = record.getScore() != null && total > 0
+                    ? (int) Math.round(record.getScore() / (100.0 / total))
+                    : 0;
+            m.put("correctCount", correct);
+            m.put("totalCount", total);
+
+            result.add(m);
+        }
         return result;
     }
 

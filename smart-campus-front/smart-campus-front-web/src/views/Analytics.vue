@@ -114,9 +114,7 @@
 <script setup>
 import { ref, onMounted } from 'vue'
 import { ElMessage } from 'element-plus'
-import request from '@/api/request'
-import { getMyCourses } from '@/api/enrollment'
-import { getStudentProfile, getStudentWarnings } from '@/api/ai-profile'
+import { getLearningStats, getLearningLogs, getAnalyticsProfile, getAnalyticsWarnings } from '@/api/analytics'
 import { useUserStore } from '@/stores/user'
 
 const userStore = useUserStore()
@@ -150,13 +148,9 @@ function getTrendType(trend) {
 
 async function loadStats() {
   try {
-    const res = await getMyCourses()
-    enrolledCount.value = (res.data || []).length
-    courseProgress.value = res.data?.map?.map(c => ({
-      courseId: c.id,
-      courseName: c.name,
-      completionRate: Math.floor(Math.random() * 60), // TODO: backend progress data
-    })) || []
+    const { enrolledCount: ec, courseProgress: cp } = await getLearningStats()
+    enrolledCount.value = ec
+    courseProgress.value = cp
   } catch {
     // not logged in
   }
@@ -164,7 +158,7 @@ async function loadStats() {
 
 async function loadLogs() {
   try {
-    const res = await request.get('/learning/logs', { params: { pageNo: 0, pageSize: 10 } })
+    const res = await getLearningLogs({ pageNo: 0, pageSize: 10 })
     logs.value = res.data?.list || []
   } catch {
     // no logs
@@ -174,13 +168,13 @@ async function loadLogs() {
 async function loadProfile() {
   if (!studentId) return
   try {
-    const res = await getStudentProfile(studentId)
+    const res = await getAnalyticsProfile(studentId)
     profile.value = res.data
   } catch {
     // no profile
   }
   try {
-    const res = await getStudentWarnings(studentId)
+    const res = await getAnalyticsWarnings(studentId)
     warnings.value = res.data || []
   } catch {
     warnings.value = []

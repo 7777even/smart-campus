@@ -13,3 +13,10 @@ export function login(data) {
 export function getUserInfo() {
   return request.get('/auth/info')
 }
+
+/**
+ * 退出登录
+ */
+export function logout() {
+  return request.post('/auth/logout')
+}

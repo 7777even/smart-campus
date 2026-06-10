@@ -51,6 +51,13 @@ public class ExamController {
         return R.ok(examWebBiz.startExam(studentId, examId));
     }
 
+    @GetMapping("/results")
+    @Operation(summary = "成绩查询")
+    public R<List<Map<String, Object>>> getExamResults(
+            @RequestAttribute(required = false) Long studentId) {
+        return R.ok(examWebBiz.getExamResults(studentId));
+    }
+
     @PostMapping("/submit")
     @Operation(summary = "提交答卷")
     public R<Map<String, Object>> submitAnswers(

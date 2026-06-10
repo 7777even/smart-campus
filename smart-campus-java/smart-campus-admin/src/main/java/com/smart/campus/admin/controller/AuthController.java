@@ -85,4 +85,14 @@ public class AuthController {
 
         return R.ok(userInfo);
     }
+
+    /**
+     * 退出登录
+     */
+    @PostMapping("/logout")
+    public R<Void> logout(@RequestAttribute Long userId) {
+        // JWT 无服务端状态，清除前端 token 即完成登出
+        // 此处记录日志以备审计
+        return R.ok(null);
+    }
 }

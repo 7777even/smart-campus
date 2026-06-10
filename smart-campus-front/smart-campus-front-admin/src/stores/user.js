@@ -3,11 +3,11 @@ import { defineStore } from 'pinia'
 import { login as loginApi, getUserInfo, logout as logoutApi } from '@/api/auth'
 
 export const useUserStore = defineStore('user', () => {
-  const token = ref(localStorage.getItem('portal_token') || '')
-  const userInfo = ref(JSON.parse(localStorage.getItem('portal_user') || 'null'))
+  const token = ref(localStorage.getItem('token') || '')
+  const userInfo = ref(JSON.parse(localStorage.getItem('user') || 'null'))
 
   const isLoggedIn = computed(() => !!token.value)
-  const studentId = computed(() => userInfo.value?.studentId)
+  const role = computed(() => userInfo.value?.role)
   const realName = computed(() => userInfo.value?.realName || '游客')
 
   async function login(username, password) {
@@ -15,8 +15,8 @@ export const useUserStore = defineStore('user', () => {
     const { token: t, user } = res.data
     token.value = t
     userInfo.value = user
-    localStorage.setItem('portal_token', t)
-    localStorage.setItem('portal_user', JSON.stringify(user))
+    localStorage.setItem('token', t)
+    localStorage.setItem('user', JSON.stringify(user))
     return res
   }
 
@@ -24,7 +24,7 @@ export const useUserStore = defineStore('user', () => {
     try {
       const res = await getUserInfo()
       userInfo.value = res.data
-      localStorage.setItem('portal_user', JSON.stringify(res.data))
+      localStorage.setItem('user', JSON.stringify(res.data))
       return res.data
     } catch {
       clearLoginData()
@@ -43,9 +43,9 @@ export const useUserStore = defineStore('user', () => {
   function clearLoginData() {
     token.value = ''
     userInfo.value = null
-    localStorage.removeItem('portal_token')
-    localStorage.removeItem('portal_user')
+    localStorage.removeItem('token')
+    localStorage.removeItem('user')
   }
 
-  return { token, userInfo, isLoggedIn, studentId, realName, login, fetchUserInfo, logout, clearLoginData }
+  return { token, userInfo, isLoggedIn, role, realName, login, fetchUserInfo, logout, clearLoginData }
 })
